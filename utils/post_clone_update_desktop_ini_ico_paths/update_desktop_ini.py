@@ -73,7 +73,7 @@ def run_bash_script():
     except Exception as ex:
         print(f"An unexpected error occurred: {ex}")
 
-if __name__ == "__main__":
+def run():
     current_os = platform.system()
 
     if current_os == "Windows":
@@ -82,3 +82,7 @@ if __name__ == "__main__":
         run_bash_script()
     else:
         print(f"Error: Unsupported operating system: {current_os}")
+            
+if __name__ == "__main__":
+    run()
+    

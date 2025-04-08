@@ -1,0 +1,2 @@
+import utils.post_clone_update_desktop_ini_ico_paths.update_desktop_ini as update_desktop_ini
+update_desktop_ini.run()

@@ -13,10 +13,6 @@ numpy = ">=2.2.4,<3.0.0"
 matplotlib = ">=3.10.1,<4.0.0"
 cmd2 = ">=2.5.11,<3.0.0"
 
-# Scripts definition
-#[tool.poetry.scripts]
-#post-clone-update-ini-ico-paths = "utils.post_clone_update_desktop_ini_ico_paths.update_desktop_ini"
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
