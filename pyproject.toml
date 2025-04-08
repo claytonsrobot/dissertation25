@@ -1,25 +1,25 @@
-[project]
-name = "socem25"
-version = "2.0.0"
-description = "Clayton takes a stab at modularizing his old SOCEM code.The goals is to create a directory of code, rather than a single file, and to use good coding principles."
-authors = [
-    {name = "georgeclaytonbennett@gmail.coma"}
-]
-license = {text = "BSD-3"}
+[tool.poetry]
+name = "dissertation25"
+version = "0.0.0"
+description = "Clayton takes a stab at helping his friend Michael."
+authors = ["georgeclaytonbennett@gmail.coma"]
+license = "BSD-3"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "pyserial (>=3.5,<4.0)",
-    "numpy (>=2.2.4,<3.0.0)",
-    "matplotlib (>=3.10.1,<4.0.0)",
-    "xlsxwriter (>=3.2.2,<4.0.0)",
-    "cmd2 (>=2.5.11,<3.0.0)"
-]
 
+# Dependencies
+[tool.poetry.dependencies]
+python = ">=3.12"
+numpy = ">=2.2.4,<3.0.0"
+matplotlib = ">=3.10.1,<4.0.0"
+cmd2 = ">=2.5.11,<3.0.0"
+
+# Scripts definition
+#[tool.poetry.scripts]
+#post-clone-update-ini-ico-paths = "utils.post_clone_update_desktop_ini_ico_paths.update_desktop_ini"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-post-clone-update-ini-ico-paths = "utils.update_desktop_ini" # 
+# Disable package installation
+package-mode = false

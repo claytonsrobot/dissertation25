@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+import platform
 
 # Ensure the root directory is part of sys.path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -17,9 +18,10 @@ def run_powershell_script():
     # Load the configuration file
     config = import_toml(CONFIG_FILE)
 
-    # Retrieve verbosity setting from the TOML file
+    # Retrieve verbosity and relative_ico_path settings from the TOML file
     verbose = config["config"].get("verbose", False)
-
+    relative_ico_path = config["config"].get("relative_ico_path", "\\media\\media-ico\\")
+    
     # Define the path to the PowerShell script
     powershell_script = os.path.join(script_dir, "update_desktop_ini.ps1")
 
@@ -28,25 +30,23 @@ def run_powershell_script():
         print(f"Error: PowerShell script not found at {powershell_script}")
         return
 
-    #print(f"Running PowerShell script: {powershell_script}")
-
     try:
-        # Pass verbosity configuration to the PowerShell script
+        # Pass configuration values to the PowerShell script
         verbosity_flag = "-Verbose" if verbose else "-Silent"
-        subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", powershell_script, verbosity_flag], check=True)
+        #subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", powershell_script, verbosity_flag, f"-RelativeIcoPathTemplate:{relative_ico_path}"], check=True)
+        subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", powershell_script, verbosity_flag, f"-RelativeIcoPath:{relative_ico_path}"], check=True)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while running the PowerShell script: {e}")
     except Exception as ex:
         print(f"An unexpected error occurred: {ex}")
 
-import platform
-
 def run_bash_script():
     # Load the configuration file
     config = import_toml(CONFIG_FILE)
 
-    # Retrieve verbosity setting from the TOML file
+    # Retrieve verbosity and relative_ico_path settings from the TOML file
     verbose = config["config"].get("verbose", False)
+    relative_ico_path = config["config"].get("relative_ico_path", "{library}/media/media-ico/{icon_filename}")
 
     # Define the path to the Bash script
     bash_script = os.path.join(script_dir, "update_desktop_ini.sh")
@@ -66,8 +66,8 @@ def run_bash_script():
         return
 
     try:
-        # Pass verbosity configuration to the Bash script
-        subprocess.run(["bash", bash_script, verbosity_flag], check=True)
+        # Pass configuration values to the Bash script
+        subprocess.run(["bash", bash_script, verbosity_flag, f"--relative_ico_path={relative_ico_path}"], check=True)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while running the Bash script: {e}")
     except Exception as ex:

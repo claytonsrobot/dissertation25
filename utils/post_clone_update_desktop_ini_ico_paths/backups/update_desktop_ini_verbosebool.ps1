@@ -1,16 +1,7 @@
 param(
     [switch]$Verbose,  # Flag for verbose mode
-    [switch]$Silent,   # Flag for silent mode
-    [string]$RelativeIcoPath  # Relative path to the ico directory from the project root
+    [switch]$Silent    # Flag for silent mode
 )
-
-# Ensure $RelativeIcoPath has a default value if not provided
-if (-not $RelativeIcoPath) {
-    $RelativeIcoPath = "media\\media-ico\\"  # Set default value
-}
-
-#Write-Host "RelativeIcoPath:" $RelativeIcoPath  # Debugging line
-
 
 # Determine verbosity
 $SilentMode = $Silent
@@ -40,7 +31,7 @@ function Resolve-IconPath {
         [string]$Filename
     )
     # Return the absolute path for IconResource
-    return "$ProjectDir\$RelativeIcoPath$Filename"
+    return "$ProjectDir\media\media-ico\$Filename"
 }
 
 # Find all desktop.ini files
@@ -70,9 +61,8 @@ foreach ($File in $DesktopIniFiles) {
                 $ExistingFilename = Split-Path -Leaf ($Line -replace "IconResource=", "")
                 $CurrentIconFilename = $ExistingFilename  # Store the current icon filename
                 $AbsoluteIconPath = Resolve-IconPath -Filename $ExistingFilename  # Absolute path for IconResource
-                #Write-Host "AbsoluteIconPath:" $AbsoluteIconPath
                 $RelativeIconPath = Convert-ToRelativePath -AbsolutePath $AbsoluteIconPath  # Relative path for logs
-                #Write-Host "RelativeIconPath:" $RelativeIconPath
+
                 if ($Line -ne "IconResource=$AbsoluteIconPath") {
                     # Only update if the new path is different
                     $UpdatedLines += "IconResource=$AbsoluteIconPath"
