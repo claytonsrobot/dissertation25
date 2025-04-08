@@ -1,0 +1,67 @@
+{
+  "session_context": {
+    "scripts": {
+      "python_script": {
+        "description": "Main Python script orchestrating the execution of either PowerShell or Bash based on the operating system.",
+        "functions": {
+          "run_powershell_script": {
+            "purpose": "Executes PowerShell script using subprocess and passes verbosity and configuration values.",
+            "dependencies": ["import_toml", "CONFIG_FILE", "subprocess.run"],
+            "output_behavior": "Prints relative paths in logs; assigns absolute paths for IconResource.",
+            "os_specific": "Windows"
+          },
+          "run_bash_script": {
+            "purpose": "Executes Bash script using subprocess and passes verbosity and configuration values.",
+            "dependencies": ["import_toml", "CONFIG_FILE", "subprocess.run"],
+            "output_behavior": "Prints relative paths in logs; assigns absolute paths for IconResource.",
+            "os_specific": "Linux/macOS"
+          }
+        }
+      },
+      "powershell_script": {
+        "description": "Script to process desktop.ini files on Windows, updating IconResource paths.",
+        "functions": {
+          "Convert-ToRelativePath": {
+            "purpose": "Converts absolute paths to project-relative paths for logs.",
+            "input": ["AbsolutePath"],
+            "output": "Relative path starting with .\\{root}\\{subdir}."
+          },
+          "Resolve-IconPath": {
+            "purpose": "Generates absolute paths for IconResource assignments.",
+            "input": ["Filename"],
+            "output": "Absolute path: C:\\Users\\user\\Documents\\dev\\AgMEQ\\{root}\\media\\media-ico\\{iconfile}"
+          }
+        }
+      },
+      "bash_script": {
+        "description": "Script to process desktop.ini files on Linux/macOS, updating IconResource paths.",
+        "functions": {
+          "convert_to_relative_path": {
+            "purpose": "Converts absolute paths to project-relative paths for logs.",
+            "input": ["AbsolutePath", "ProjectDir"],
+            "output": "Relative path starting with ./{root}/{subdir}."
+          },
+          "resolve_icon_path": {
+            "purpose": "Generates absolute paths for IconResource assignments.",
+            "input": ["ProjectDir", "Filename"],
+            "output": "Absolute path: /Users/user/Documents/dev/AgMEQ/{root}/media/media-ico/{iconfile}"
+          }
+        }
+      }
+    },
+    "configuration_toml": {
+      "description": "Defines the configuration settings for the scripts.",
+      "elements": {
+        "verbose": {
+          "type": "boolean",
+          "description": "Controls verbosity in script output. True for detailed logs, False for silent mode."
+        }
+      },
+      "example": {
+        "config": {
+          "verbose": true
+        }
+      }
+    }
+  }
+}

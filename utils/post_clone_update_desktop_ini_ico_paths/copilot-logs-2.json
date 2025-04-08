@@ -1,0 +1,162 @@
+{
+    "project": {
+      "description": "Manage and update desktop.ini files across project directories.",
+      "note": "All paths provided in this JSON are for demonstration purposes only. The scripts are designed to be modular and configurable, relying on dynamic values and relative paths to ensure flexibility across different environments.",
+      "root_directory": "C:\\Users\\user\\Documents\\dev\\AgMEQ\\socem25",
+      "modules": {
+        "scripts": {
+          "python_script": {
+            "purpose": "Acts as the orchestrator for invoking PowerShell (on Windows) or Bash (on Linux/macOS) scripts, passing configuration values.",
+            "functions": {
+              "run_powershell_script": {
+                "purpose": "Execute the PowerShell script with appropriate verbosity and configuration values.",
+                "input_parameters": ["verbose", "relative_ico_path"],
+                "output_behavior": "Prints project-relative paths for logging and ensures absolute paths for IconResource assignments in .ini files.",
+                "error_handling": {
+                  "missing_script": "Raise error if PowerShell script file is not found.",
+                  "execution_failure": "Log specific error message if PowerShell fails to execute."
+                },
+                "operating_system": "Windows"
+              },
+              "run_bash_script": {
+                "purpose": "Execute the Bash script with appropriate verbosity and configuration values.",
+                "input_parameters": ["verbose", "relative_ico_path"],
+                "output_behavior": "Prints project-relative paths for logging and ensures absolute paths for IconResource assignments in .ini files.",
+                "error_handling": {
+                  "missing_script": "Raise error if Bash script file is not found.",
+                  "unsupported_os": "Return error if executed on unsupported operating system.",
+                  "execution_failure": "Log specific error message if Bash script fails to execute."
+                },
+                "operating_system": "Linux/macOS"
+              }
+            }
+          },
+          "powershell_script": {
+            "purpose": "Find all desktop.ini files, update IconResource paths, and log updates.",
+            "functions": {
+              "Convert-ToRelativePath": {
+                "purpose": "Converts absolute paths to relative paths with root directory included.",
+                "input": ["AbsolutePath"],
+                "output": "Relative path starting with .\\socem25\\{subdir}\\{file}.",
+                "validation_checks": {
+                  "invalid_path": "Return original absolute path if it does not match the project directory."
+                }
+              },
+              "Resolve-IconPath": {
+                "purpose": "Generates absolute paths for IconResource entries.",
+                "input": ["Filename"],
+                "output": "Absolute path: C:\\Users\\user\\Documents\\dev\\AgMEQ\\socem25\\media\\media-ico\\{iconfile}.",
+                "fallback_strategy": {
+                  "missing_filename": "Skip processing if filename cannot be extracted or is empty."
+                }
+              },
+              "ProcessingLoop": {
+                "description": "Iterates over all desktop.ini files, modifies IconResource entries, logs changes, and writes updated content.",
+                "log_format": {
+                    "description": "Format for log entries in scripts to indicate the status of processing for IconResource paths.",
+                    "examples": [
+                        ".\\socem25\\.git\\desktop.ini -> .\\socem25\\media\\media-ico\\git-1.ico",
+                        ".\\socem25\\.arduino\\desktop.ini ~ .\\socem25\\media\\media-ico\\arduino.ico"
+                    ],
+                    "meaning": {
+                        "->": "Indicates the IconResource path was updated in the desktop.ini file. This shows the old desktop.ini location on the left and the new IconResource assignment path on the right.",
+                        "~": "Indicates the IconResource path was already correct and unchanged. The log shows the desktop.ini location and the existing IconResource path for confirmation."
+                    }
+                },
+                "ini_update": {
+                  "icon_resource_format": "Absolute path: C:\\Users\\user\\Documents\\dev\\AgMEQ\\socem25\\media\\media-ico\\{iconfile},0",
+                  "fallback_strategy": "Leave IconResource entry untouched if the resolved path fails validation."
+                },
+                "error_handling": {
+                  "file_read_failure": "Log error if desktop.ini file cannot be read.",
+                  "update_failure": "Log error if updates cannot be written to desktop.ini."
+                }
+              }
+            }
+          },
+          "bash_script": {
+            "purpose": "Equivalent to the PowerShell script, tailored for Linux/macOS.",
+            "functions": {
+              "convert_to_relative_path": {
+                "purpose": "Converts absolute paths to relative paths with root directory included.",
+                "input": ["AbsolutePath", "ProjectDir"],
+                "output": "Relative path starting with ./socem25/{subdir}/{file}.",
+                "validation_checks": {
+                  "invalid_path": "Return original absolute path if it does not match the project directory."
+                }
+              },
+              "resolve_icon_path": {
+                "purpose": "Generates absolute paths for IconResource entries.",
+                "input": ["Filename"],
+                "output": "Absolute path: /Users/user/Documents/dev/AgMEQ/socem25/media/media-ico/{iconfile}.",
+                "fallback_strategy": {
+                  "missing_filename": "Skip processing if filename cannot be extracted or is empty."
+                }
+              },
+              "processing_loop": {
+                "description": "Iterates over all desktop.ini files, modifies IconResource entries, logs changes, and writes updated content.",
+                "log_format": {
+                  "description": "Format for log entries. Paths are project-relative and demonstrate modularity.",
+                  "example": "./socem25/.git/desktop.ini -> ./socem25/media/media-ico/git-1.ico"
+                },
+                "ini_update": {
+                  "icon_resource_format": "/Users/user/Documents/dev/AgMEQ/socem25/media/media-ico/{iconfile},0",
+                  "fallback_strategy": "Leave IconResource entry untouched if the resolved path fails validation."
+                },
+                "error_handling": {
+                  "file_read_failure": "Log error if desktop.ini file cannot be read.",
+                  "update_failure": "Log error if updates cannot be written to desktop.ini."
+                }
+              }
+            }
+          }
+        }
+      },
+      "configuration": {
+        "description": "Configuration settings for scripts.",
+        "structure": {
+          "verbose": {
+            "type": "boolean",
+            "description": "Controls verbosity of logs in scripts. Set to true for detailed logs."
+          },
+          "relative_ico_path": {
+            "type": "string",
+            "description": "Relative path to icon storage directory from project root.",
+            "example": "\\media\\media-ico\\",
+            "validation_checks": {
+              "missing_value": "Fallback to default relative path '\\media\\media-ico\\' if configuration value is missing."
+            }
+          }
+        }
+      },
+      "expected_behavior": {
+        "logs": {
+          "description": "Logging behavior expected in scripts.",
+          "example": ".\\socem25\\.git\\desktop.ini -> .\\socem25\\media\\media-ico\\git-1.ico",
+          "note": "Paths in logs are examples only and modularly reflect the project-relative structure. Scripts dynamically resolve paths based on runtime inputs.",
+          "both_paths": "Logs include root directory on both sides of the log.",
+          "validation_checks": {
+            "missing_root_directory": "Log warning if root directory is missing in either side of the log."
+          }
+        },
+        ".ini_updates": {
+          "description": "Expected updates to desktop.ini files.",
+          "icon_resource_format": "Absolute path: C:\\Users\\user\\Documents\\dev\\AgMEQ\\socem25\\media\\media-ico\\{iconfile},0",
+          "note": "Paths in .ini files are examples only. Scripts dynamically generate absolute paths using modular inputs.",
+          "validation_checks": {
+            "missing_filename": "Skip update if filename cannot be resolved for IconResource entry."
+          },
+          "error_handling": {
+            "update_failure": "Log error if desktop.ini file cannot be updated."
+          }
+        }
+      },
+      "fallback_strategy": {
+        "description": "Fallbacks for specific scenarios.",
+        "scenarios": {
+          "missing_filename": "Skip processing the desktop.ini file if the filename for IconResource cannot be resolved.",
+          "invalid_path": "Use original path without modification if validation fails."
+        }
+      }
+    }
+  }
