@@ -1,0 +1,66 @@
+[example] 
+"stack_direction_groups" = "diagonal_stack"
+"stack_direction_subgroups" = "time_stack"
+"stack_direction_curves" = "depth_stack"
+"import_style_plugin" =  "import_plugin_CSV_3D"
+"export_style_plugin" =  "export_plugin_createFBX_bar_3D"
+"color_style_plugin" = "color_plugin_binned_gradient"
+"column_time" = "Time"
+"column_height" = "Force"
+"column_depth" = "Elevation"
+"column_color" = "Distance"
+"columns_metadata" = ""	
+"data_start_idx" = 0
+"file_encoding" = "bin"
+"file_format" = "FBX"       
+"time-series-transcoding" = "null"
+"keep-true-destroy-false-unassigned-curves" = false
+"real-true-normalized-false-scale" = true
+
+[equations]
+#directory = os.path.dirname(__file__)
+#operatingsystem = platform.system() #determine OS
+## use or sys.plaform instead of platform.system, to avoid importing platform
+#print("operatingsystem =",operatingsystem)
+#print("os.getlogin() =",os.getlogin())
+#print("operator =",operator)
+#print("location =",location)
+#today = date.today()
+#datestring = today.strftime("%b-%d-%Y")
+#inchonvert = (((math.pi*(0.764))*31.4136)/359) # converts displacement to inches, wheel diameter = 31.4136
+"today" = "date.today()"
+
+[config]
+"operator" = "Clayton Bennett"
+"location" = "EP425" # "Kambitsch Farm"
+"coordinates" = "46.592516,-116.946268"
+"ignoreserial = false 
+"barlength = 76 # cm. this shouldn"t ever change, unless the bar is replaced. i.e. the width of a side hit cell.
+#"dev_manual = "COM7" # manual override
+"dev_manual = "/dev/ttyACM0" # manual override
+"dev_manualOverride" = true
+"useInitialPlot_PeackClick" = false
+"disReferenced_PeakClick" = false
+"barradius" = .8 # 1 cm = 0.32 inches
+"default_stemheight" = 10.0 # cm
+"initial_barbottomOverStemheight_coeff" = 0.8
+"convert_KgToLbs" = 2.20462262 #kg to lbs
+"convert_KgToN" = 1/9.81 #kg to N # CHECK FOR ACCURACY CB 8/9/2022
+"convert_NToLbs" = 4.44822
+#"calibrationFactor" = 199750 # 23.4 N > 5 lbs; 5 lbs = 22.2411
+"calibrationFactor" = 204200 # 22.24 N = 5 lbs
+"sleepSend" = 0.5
+"encoderWorked_override = false # false means encoder will be trated as not working. this is poor code and should be improved.
+"assessAllTests" = true
+"refreshAllAuto" = false
+"autopopulatestemcount" = true
+"defaultstemcount" = 33
+"importFileDataTF" = true
+#"visualizeDatastream" = true
+
+"visualizeDatastream" = false #true #set to live graph for data display
+#"vis" = "s" # legacy
+"vis" = "nope" # 
+
+[notes]
+## visualizeDatastream ( search: "def datafeed(" ) is broken right now. Refer to earlier versions (pre v65)for reference of how Bebee left it.

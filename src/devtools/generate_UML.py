@@ -9,9 +9,9 @@ from pylint import pyreverse
 import os
 from src.directories import Directories 
 
-def generate_UML(source_location = Directories.get_core_dir()):
+def generate_UML(source_location = Directories.get_src_dir()):
     os.system(f'pyreverse -o png {source_location} -d {source_location}')
 
 if __name__ == "__main__":
-    generate_UML(Directories.get_core_dir())
+    generate_UML(Directories.get_src_dir())
  

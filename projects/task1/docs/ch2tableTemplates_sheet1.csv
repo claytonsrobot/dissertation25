@@ -1,0 +1,47 @@
+Aquifer,number of samples,minimum tracer-based mean age (y),mean tracer-based mean age (y),first quartile,median tracer-based mean age (y),third quartile,IQR,maximum tracer-based mean age (y)
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum particle tracking-based mean age (y),mean particle tracking-based mean age (y),first quartile,median particle tracking-based mean age (y),third quartile,IQR,maximum particle tracking-based mean age (y)
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum tracer-based age coefficient of variation (y^2),mean tracer-based age coefficient of variation (y^2),first quartile,median tracer-based age coefficient of variation (y^2),third quartile,IQR,maximum tracer-based age coefficient of variation (y^2)
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum particle tracking-based age coefficient of variation (y^2),mean particle tracking-based age coefficient of variation (y^2),first quartile,median particle tracking-based age coefficient of variation (y^2),third quartile,IQR,maximum particle tracking-based age coefficient of variation (y^2)
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum mean effective resistivity (Ohm-m),mean mean effective resistivity (Ohm-m),first quartile,median mean effective resistivity (Ohm-m),third quartile,IQR,maximum mean effective resistivity (Ohm-m)
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum average coefficient of variation of resistivity (Ohm-m)^2,mean average coefficient of variation of resistivity (Ohm-m)^2,first quartile,median average coefficient of variation of resistivity (Ohm-m)^2,third quartile,IQR,maximum average coefficient of variation of resistivity (Ohm-m)^2
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum coefficient of variation of coefficient of variation of resistivity (Ohm-m)^4,mean coefficient of variation of coefficient of variation of resistivity (Ohm-m)^4,first quartile,median coefficient of variation of coefficient of variation of resistivity (Ohm-m)^4,third quartile,IQR,maximum coefficient of variation of coefficient of variation of resistivity (Ohm-m)^4
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,
+,,,,,,,,
+Aquifer,number of samples,minimum coefficient of variation of effective resistivity (Ohm-m)^2,mean coefficient of variation of effective resistivity (Ohm-m)^2,first quartile,median coefficient of variation of effective resistivity (Ohm-m)^2,third quartile,IQR,maximum coefficient of variation of effective resistivity (Ohm-m)^2
+MRVA,,,,,,,,
+TRRC,,,,,,,,
+CLBR (MCAQ),,,,,,,,
+WLCX (LWAQ),,,,,,,,

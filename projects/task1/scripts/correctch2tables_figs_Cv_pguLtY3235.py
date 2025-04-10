@@ -1,0 +1,1082 @@
+import os, sys
+from os import listdir
+from os.path import isfile, join
+#onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+import numpy as np
+from scipy import stats
+from scipy.stats import f_oneway
+from numpy import array
+import pandas as pd
+# import sciencebasepy
+# import time
+# import zipfile
+# # import scripts from gitrepo
+# import ZipUtility as zu 
+# import SB_Uploader as su
+import geopandas as gp
+from gisutils import project
+from shapely.geometry import Point
+import statistics
+import math
+from math import log10, floor
+import matplotlib.pyplot as plt
+import rasterio
+from rasterio.plot import show
+
+#mergeADs=pd.read_csv(os.path.join('redopdfs12174pguL','revisedmadpguLtY.csv'))
+#mergeADs=pd.read_csv(os.path.join('plots','mergeADsTable_c2_pguLtY21751455.csv'))
+#mergeADs=pd.read_csv('table2_1a_pguL.csv')
+#mergeADs=pd.read_csv('mads4lpmstats3235.csv')
+mergeADs=pd.read_csv('mads4ptstats3235.csv')
+#mergeADs=pd.read_csv('mads4resstats3235.csv')
+
+
+# t1=gp.read_file(os.path.join('Table1_Wells','Table1_Wells.shp'))
+# t1shp=t1.shape
+# print('t1:',t1shp)
+# numrecs=t1shp[0]
+# Ra=range(numrecs)
+# for q in Ra:
+#     siteag=t1['siteag'][q]
+#     t1.loc[q,'siteno']=siteag[-15:]
+# t1_siteags = t1['siteag'].unique().tolist()
+# print(t1.columns.tolist())#[]
+# print('t1_siteags[0]:')
+# print(t1_siteags[0])
+# print(type(t1_siteags[0]))
+# print('\t')
+
+# t1_sites = t1['siteno'].unique().tolist()
+# print('t1_sites[0]:')
+# print(t1_sites[0])
+# print(type(t1_sites[0]))
+# # t1['sitenostr']=t1['siteno'].astype(str)
+# mergeADs['siteno']=mergeADs['siteno_x'].astype(str)
+# mergeADs_sites = mergeADs['siteno'].unique().tolist()
+# mergeADs_t1_s=list(set(mergeADs_sites)-set(t1_sites))
+# print('mergeADs_t1_s:',mergeADs_t1_s)#should be []
+# # t1_mergeADs_s=list(set(t1_sites)-set(mergeADs_sites))
+# # print('t1_mergeADs_s:',t1_mergeADs_s)
+# print('\t')
+# #sys.exit()
+# # for q in Ra:
+# #     t1.loc[q,'sitenoint']=int(t1['siteno'][q])
+# # t1_sites = t1['sitenoint'].unique().tolist()
+# # print('\t')
+
+# # mergeADs_t1_s=list(set(mergeADs_sites)-set(t1_sites))
+# # print('mergeADs_t1_s:',mergeADs_t1_s)#should be []
+# # # t1_mergeADs_s=list(set(t1_sites)-set(mergeADs_sites))
+# # # print('t1_mergeADs_s:',t1_mergeADs_s)
+# # print('\t')
+# #sys.exit()
+
+# #mergeADs=mergeADs.merge(t1,how='left',left_on='siteno',right_on='sitenostr')
+# mergeADs=mergeADs.merge(t1,how='left',on='siteno')
+# print('mergeADs:',mergeADs.shape)
+# print(mergeADs.columns.unique().tolist())
+# mergeADs_sites = mergeADs['siteno'].unique().tolist()
+# print('mergeADs_sites:')
+# print(len(mergeADs_sites))
+#mergeADs.to_csv(os.path.join('plots','mergeADs9154.csv'))
+
+# mergeADs_layers = mergeADs['Layer'].unique().tolist()
+# print(mergeADs_layers)
+# print('Thank You!')
+# #sys.exit()
+# mergeADs=mergeADs.replace(-9999,np.nan)
+# mergeADs_mrva=mergeADs.loc[mergeADs['Layer']=='MRVA']
+# mergeADs_TRRC=mergeADs.loc[mergeADs['Layer']=='TRRC']
+# mergeADs_mrvashp=mergeADs_mrva.shape
+# numsamples_mrva=mergeADs_mrvashp[0]
+# mergeADs_CLBR=mergeADs.loc[mergeADs['Layer'].isin(['CLBR','LCAQ','MCAQ','UCAQ'])]
+# mergeADs_WLCX=mergeADs.loc[mergeADs['Layer'].isin(['MWAQ','LWAQ'])]
+# mergeADs_meas=mergeADs.loc[mergeADs['Layer'].isin(['CLBR','CNZC','LCAQ','MCAQ','MWAQ','LWAQ','UCAQ'])]
+# mergeADs_measshp=mergeADs_meas.shape
+# numsamples_meas=mergeADs_measshp[0]
+
+# #mergeADs.to_csv(os.path.join('plots','mergeADs91642135avglogreseff.csv'))
+# #sys.exit()
+# mergeADs_sites = mergeADs['siteag'].unique().tolist()
+# print('mergeADs_sites[0]:')
+# print(mergeADs_sites[0])
+# print(type(mergeADs_sites[0]))
+
+mergeADs=mergeADs.replace(-9999,np.nan)
+mergeADsshp=mergeADs.shape
+mADcols=mergeADs.columns.unique().tolist()
+print('mergeADs:',mergeADsshp)
+
+mergeADs.loc[:,'GWSys']='TRRC'
+mergeADs.loc[mergeADs['Layer']=='MRVA','GWSys']='MRVA'
+mergeADs.loc[mergeADs['Layer'].isin(['CLBR','CNZC','LCAQ','MCAQ','UCAQ']),'GWSys']='CLBR'
+mergeADs.loc[mergeADs['Layer'].isin(['MWAQ','LWAQ','UWAQ']),'GWSys']='WLCX'
+
+#mergeADs=mergeADs.replace(-9999,np.nan)
+mergeADs=mergeADs.replace(0,np.nan)
+gwsysgrp=mergeADs.groupby('GWSys')
+######################################################
+# group by siteag
+#t4sitegrp = t4.groupby('siteag')
+# #print('shape of lpmt_ddsitegrp:',lpmt_ddsitegrp.shape)#groupby object has no attribute shape. 
+# print('**********data filter and grouping complete**************')
+# print('\t')
+aqs=[]
+numsamps=[]
+meds=[]
+mins=[]
+maxes=[]
+arithmeticmeans=[]
+stdevs=[]
+q75s=[]
+q25s=[]
+iqrs=[]
+for name,group in gwsysgrp:#for name,group in lpmt_ddsitegrp:
+	aqs.append(name)
+	grpshp=group.shape
+	#print(grpshp)
+	#print(group.head())
+	numrecs=grpshp[0]
+	numsamps.append(numrecs)
+	# variable=['MER','cvlpmad','cvptad','acvr','cver','cvcvr']
+	# for v in variable:
+	#     if numrecs>1:
+	#     #print(numrecs)
+	#     #z=range(numrecs)
+	#     # for y in z:
+	#         x=statistics.median(group['meanAgeWA_rounded'])
+	#         y=min(group['meanAgeWA_rounded'])
+	#         a=max(group['meanAgeWA_rounded'])
+	#         b=np.mean(group['meanAgeWA_rounded'])
+	#         c=statistics.stdev(group['meanAgeWA_rounded'])
+	#         #print(x)
+	#         #mrvamedianmeanagesbysite.concat([f'{group}:{statistics.median(group['meanAgeWA_rounded'])}'])
+	#     else:
+	#         x=statistics.median(group['meanAgeWA_rounded'])
+	#         y=min(group['meanAgeWA_rounded'])
+	#         a=max(group['meanAgeWA_rounded'])
+	#         b=np.mean(group['meanAgeWA_rounded'])
+	#         c=-9999
+	if numrecs>1:
+	#     #print(numrecs)
+	#     #z=range(numrecs)
+	#     # for y in z:
+		x=statistics.median(group['cvptad'])
+		meds.append(x)
+		y=min(group['cvptad'])
+		mins.append(y)
+		a=max(group['cvptad'])
+		maxes.append(a)
+		b=np.mean(group['cvptad'])
+		arithmeticmeans.append(b)
+		c=statistics.stdev(group['cvptad'])
+		stdevs.append(c)
+		data=group['cvptad'].tolist()
+		q75,q25=np.percentile(data,[75,25])
+		q75s.append(q75)
+		q25s.append(q25)
+		iqr=q75-q25
+		iqrs.append(iqr)
+		#print(x)
+		#mrvamedianmeanagesbysite.concat([f'{group}:{statistics.median(group['cvptad'])}'])
+	else:
+		x=statistics.median(group['cvptad'])
+		meds.append(x)
+		y=min(group['cvptad'])
+		mins.append(y)
+		a=max(group['cvptad'])
+		maxes.append(a)
+		b=np.mean(group['cvptad'])
+		arithmeticmeans.append(b)
+		c=-9999
+		stdevs.append(c)
+		q75=-9999
+		q25=-9999
+		iqr=-9999
+		q75s.append(q75)
+		q25s.append(q25)
+		iqrs.append(iqr)
+		# number_of_samples.append(numrecs)
+		# medianmeanagesbysite.append(x)
+		# avgmeanagesbysite.append(b)
+		# minmeanagesbysite.append(y)
+		# maxmeanagesbysite.append(a)
+		# stdmeanagesbysite.append(c)
+d={'aq':aqs,'number_of_samples':numsamps,'mincvptad':mins,'q25cvptad':q25s,'mediancvptad':meds,'q75cvptad':q75s,'maxcvptad':maxes,'iqrcvptad':iqrs,'ameancvptad':arithmeticmeans,'stdevcvptad':stdevs}
+#print('sites[0]:',sites[0])    
+#print('medianmeanagesbysite[0]:',medianmeanagesbysite[0])
+# numgrps=len(medianmeanagesbysite)
+# print('number of groups:',numgrps)
+print('\t')
+medianmeanagesdf=pd.DataFrame(data=d)
+medianmeanagesdf.to_csv('cvptadstatsbyaq4551528.csv')
+######################################################for name,group in gwsysgrp:
+
+mergeADs_mrva=mergeADs.loc[mergeADs['Layer']=='MRVA']
+####################################################
+# minmrvacvlpmad=min(mergeADs_mrva['cvlpmad'])
+# print('minmrvacvlpmad:',minmrvacvlpmad)
+# medmrvacvlpmad=statistics.median(mergeADs_mrva['cvlpmad'])
+# print('medmrvacvlpmad:',medmrvacvlpmad)
+# maxmrvacvlpmad=max(mergeADs_mrva['cvlpmad'])
+# print('maxmrvacvlpmad:',maxmrvacvlpmad)
+# mergeADs_mrvashp=mergeADs_mrva.shape
+# numrecs_mrva=mergeADs_mrvashp[0]
+# print('numrecs_mrva:',numrecs_mrva)
+# meanmrvacvlpmad=np.nanmean(mergeADs_mrva['cvlpmad'])
+# print('meanmrvacvlpmad:',meanmrvacvlpmad)
+
+# (gis-2) C:\github\map_gwage\MERASwd\Scripts>python correctch2tables_figs_Cv_pguLtY3235.py
+# mergeADs: (78, 44)
+# minmrvacvlpmad: 0.019794728
+# medmrvacvlpmad: 0.510069188
+# maxmrvacvlpmad: 1.971492986
+# numrecs_mrva: 67
+# meanmrvacvlpmad: 0.5900794807462685
+####################################################
+#sys.exit()
+####################################################
+minmrvacvptad=min(mergeADs_mrva['cvptad'])
+print('minmrvacvptad:',minmrvacvptad)
+medmrvacvptad=statistics.median(mergeADs_mrva['cvptad'])
+print('medmrvacvptad:',medmrvacvptad)
+maxmrvacvptad=max(mergeADs_mrva['cvptad'])
+print('maxmrvacvptad:',maxmrvacvptad)
+mergeADs_mrvashp=mergeADs_mrva.shape
+numrecs_mrva=mergeADs_mrvashp[0]
+print('numrecs_mrva:',numrecs_mrva)
+meanmrvacvptad=np.nanmean(mergeADs_mrva['cvptad'])
+print('meanmrvacvptad:',meanmrvacvptad)
+####################################################
+print('\t')
+
+mergeADs_trrc=mergeADs.loc[mergeADs['Layer']=='TRRC']
+####################################################
+####################################################
+mintrrccvptad=min(mergeADs_trrc['cvptad'])
+print('mintrrccvptad:',mintrrccvptad)
+medtrrccvptad=statistics.median(mergeADs_trrc['cvptad'])
+print('medtrrccvptad:',medtrrccvptad)
+maxtrrccvptad=max(mergeADs_trrc['cvptad'])
+print('maxtrrccvptad:',maxtrrccvptad)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrccvptad=np.nanmean(mergeADs_trrc['cvptad'])
+print('meantrrccvptad:',meantrrccvptad)
+####################################################
+print('\t')
+mergeADs_clbr=mergeADs.loc[mergeADs['Layer'].isin(['CLBR','CNZC','LCAQ','MCAQ','UCAQ'])]
+####################################################
+####################################################
+####################################################
+minclbrcvptad=min(mergeADs_clbr['cvptad'])
+print('minclbrcvptad:',minclbrcvptad)
+medclbrcvptad=statistics.median(mergeADs_clbr['cvptad'])
+print('medclbrcvptad:',medclbrcvptad)
+maxclbrcvptad=max(mergeADs_clbr['cvptad'])
+print('maxclbrcvptad:',maxclbrcvptad)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbrcvptad=np.nanmean(mergeADs_clbr['cvptad'])
+print('meanclbrcvptad:',meanclbrcvptad)
+####################################################
+########################################################################################################
+mergeADs_wlcx=mergeADs.loc[mergeADs['Layer'].isin(['MWAQ','LWAQ','UWAQ'])]
+####################################################
+
+####################################################
+####################################################
+minwlcxcvptad=min(mergeADs_wlcx['cvptad'])
+print('minwlcxcvptad:',minwlcxcvptad)
+medwlcxcvptad=statistics.median(mergeADs_wlcx['cvptad'])
+print('medwlcxcvptad:',medwlcxcvptad)
+maxwlcxcvptad=max(mergeADs_wlcx['cvptad'])
+print('maxwlcxcvptad:',maxwlcxcvptad)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxcvptad=np.nanmean(mergeADs_wlcx['cvptad'])
+print('meanwlcxcvptad:',meanwlcxcvptad)
+sys.exit()
+####################################################
+minmrvaMER=min(mergeADs_mrva['MER'])
+print('minmrvaMER:',minmrvaMER)
+medmrvaMER=statistics.median(mergeADs_mrva['MER'])
+print('medmrvaMER:',medmrvaMER)
+maxmrvaMER=max(mergeADs_mrva['MER'])
+print('maxmrvaMER:',maxmrvaMER)
+mergeADs_mrvashp=mergeADs_mrva.shape
+numrecs_mrva=mergeADs_mrvashp[0]
+print('numrecs_mrva:',numrecs_mrva)
+meanmrvaMER=np.nanmean(mergeADs_mrva['MER'])
+print('meanmrvaMER:',meanmrvaMER)
+####################################################
+####################################################
+minmrvaacvr=min(mergeADs_mrva['acvr'])
+print('minmrvaacvr:',minmrvaacvr)
+medmrvaacvr=statistics.median(mergeADs_mrva['acvr'])
+print('medmrvaacvr:',medmrvaacvr)
+maxmrvaacvr=max(mergeADs_mrva['acvr'])
+print('maxmrvaacvr:',maxmrvaacvr)
+mergeADs_mrvashp=mergeADs_mrva.shape
+numrecs_mrva=mergeADs_mrvashp[0]
+print('numrecs_mrva:',numrecs_mrva)
+meanmrvaacvr=np.nanmean(mergeADs_mrva['acvr'])
+print('meanmrvaacvr:',meanmrvaacvr)
+####################################################
+####################################################
+minmrvacver=min(mergeADs_mrva['cver'])
+print('minmrvacver:',minmrvacver)
+medmrvacver=statistics.median(mergeADs_mrva['cver'])
+print('medmrvacver:',medmrvacver)
+maxmrvacver=max(mergeADs_mrva['cver'])
+print('maxmrvacver:',maxmrvacver)
+mergeADs_mrvashp=mergeADs_mrva.shape
+numrecs_mrva=mergeADs_mrvashp[0]
+print('numrecs_mrva:',numrecs_mrva)
+meanmrvacver=np.nanmean(mergeADs_mrva['cver'])
+print('meanmrvacver:',meanmrvacver)
+####################################################
+####################################################
+minmrvacvcvr=min(mergeADs_mrva['cvcvr'])
+print('minmrvacvcvr:',minmrvacvcvr)
+medmrvacvcvr=statistics.median(mergeADs_mrva['cvcvr'])
+print('medmrvacvcvr:',medmrvacvcvr)
+maxmrvacvcvr=max(mergeADs_mrva['cvcvr'])
+print('maxmrvacvcvr:',maxmrvacvcvr)
+mergeADs_mrvashp=mergeADs_mrva.shape
+numrecs_mrva=mergeADs_mrvashp[0]
+print('numrecs_mrva:',numrecs_mrva)
+meanmrvacvcvr=np.nanmean(mergeADs_mrva['cvcvr'])
+print('meanmrvacvcvr:',meanmrvacvcvr)
+####################################################
+# minmrvavlpm=min(mergeADs_mrva['varianceLPMages'])
+# print('minmrvavlpm:',minmrvavlpm)
+# medmrvavlpm=statistics.median(mergeADs_mrva['varianceLPMages'])
+# print('medmrvavlpm:',medmrvavlpm)
+# maxmrvavlpm=max(mergeADs_mrva['varianceLPMages'])
+# print('maxmrvavlpm:',maxmrvavlpm)
+# mergeADs_mrvashp=mergeADs_mrva.shape
+# numrecs_mrva=mergeADs_mrvashp[0]
+# print('numrecs_mrva:',numrecs_mrva)
+# meanmrvavlpm=np.nanmean(mergeADs_mrva['varianceLPMages'])
+# print('meanmrvavlpm:',meanmrvavlpm)
+# minmrvaASLD=min(mergeADs_mrva['ASLD'])
+# print('minmrvaASLD:',minmrvaASLD)
+# medmrvaASLD=statistics.median(mergeADs_mrva['ASLD'])
+# print('medmrvaASLD:',medmrvaASLD)
+# maxmrvaASLD=max(mergeADs_mrva['ASLD'])
+# print('maxmrvaASLD:',maxmrvaASLD)
+# mergeADs_mrvashp=mergeADs_mrva.shape
+# numrecs_mrva=mergeADs_mrvashp[0]
+# print('numrecs_mrva:',numrecs_mrva)
+# meanmrvaASLD=np.nanmean(mergeADs_mrva['ASLD'])
+# print('meanmrvaASLD:',meanmrvaASLD)
+# minmrvaage=min(mergeADs_mrva['xbPTbs'])
+# print('minmrvaage:',minmrvaage)
+# medmrvaage=statistics.median(mergeADs_mrva['xbPTbs'])
+# print('medmrvaage:',medmrvaage)
+# maxmrvaage=max(mergeADs_mrva['xbPTbs'])
+# print('maxmrvaage:',maxmrvaage)
+# mergeADs_mrvashp=mergeADs_mrva.shape
+# numrecs_mrva=mergeADs_mrvashp[0]
+# print('numrecs_mrva:',numrecs_mrva)
+# meanmrvavptn=np.nanmean(mergeADs_mrva['VARPTbsnum'])
+# print('meanmrvavptn:',meanmrvavptn)
+# medianvptmrva=statistics.median(mergeADs_mrva['VARPTbsnum'])
+# print('medianmrvavptn:',medianvptmrva)
+# medianavrmrva=statistics.median(mergeADs_mrva['avgVARres'])
+# print('medianavrmrva:',medianavrmrva)
+# meanmrvaavr=np.nanmean(mergeADs_mrva['avgVARres'])
+# print('meanmrvaavr:',meanmrvaavr)
+# meanmrvavvr=np.nanmean(mergeADs_mrva['varVARres'])
+# print('meanmrvavvr:',meanmrvavvr)
+# meanmrvaver=np.nanmean(mergeADs_mrva['varreseff'])
+# print('meanmrvaver:',meanmrvaver)
+# medianvvrmrva=statistics.median(mergeADs_mrva['varVARres'])
+# print('medianvvrmrva:',medianvvrmrva)
+# maxmrvavvr=max(mergeADs_mrva['varVARres'])
+# print('maxmrvavvr:',maxmrvavvr)
+# medianvermrva=statistics.median(mergeADs_mrva['varreseff'])
+# print('medianvermrva:',medianvermrva)
+print('\t')
+
+mergeADs_trrc=mergeADs.loc[mergeADs['Layer']=='TRRC']
+####################################################
+mintrrccvlpmad=min(mergeADs_trrc['cvlpmad'])
+print('mintrrccvlpmad:',mintrrccvlpmad)
+medtrrccvlpmad=statistics.median(mergeADs_trrc['cvlpmad'])
+print('medtrrccvlpmad:',medtrrccvlpmad)
+maxtrrccvlpmad=max(mergeADs_trrc['cvlpmad'])
+print('maxtrrccvlpmad:',maxtrrccvlpmad)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrccvlpmad=np.nanmean(mergeADs_trrc['cvlpmad'])
+print('meantrrccvlpmad:',meantrrccvlpmad)
+####################################################
+####################################################
+mintrrccvptad=min(mergeADs_trrc['cvptad'])
+print('mintrrccvptad:',mintrrccvptad)
+medtrrccvptad=statistics.median(mergeADs_trrc['cvptad'])
+print('medtrrccvptad:',medtrrccvptad)
+maxtrrccvptad=max(mergeADs_trrc['cvptad'])
+print('maxtrrccvptad:',maxtrrccvptad)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrccvptad=np.nanmean(mergeADs_trrc['cvptad'])
+print('meantrrccvptad:',meantrrccvptad)
+####################################################
+####################################################
+mintrrcMER=min(mergeADs_trrc['MER'])
+print('mintrrcMER:',mintrrcMER)
+medtrrcMER=statistics.median(mergeADs_trrc['MER'])
+print('medtrrcMER:',medtrrcMER)
+maxtrrcMER=max(mergeADs_trrc['MER'])
+print('maxtrrcMER:',maxtrrcMER)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrcMER=np.nanmean(mergeADs_trrc['MER'])
+print('meantrrcMER:',meantrrcMER)
+####################################################
+####################################################
+mintrrcacvr=min(mergeADs_trrc['acvr'])
+print('mintrrcacvr:',mintrrcacvr)
+medtrrcacvr=statistics.median(mergeADs_trrc['acvr'])
+print('medtrrcacvr:',medtrrcacvr)
+maxtrrcacvr=max(mergeADs_trrc['acvr'])
+print('maxtrrcacvr:',maxtrrcacvr)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrcacvr=np.nanmean(mergeADs_trrc['acvr'])
+print('meantrrcacvr:',meantrrcacvr)
+####################################################
+####################################################
+mintrrccver=min(mergeADs_trrc['cver'])
+print('mintrrccver:',mintrrccver)
+medtrrccver=statistics.median(mergeADs_trrc['cver'])
+print('medtrrccver:',medtrrccver)
+maxtrrccver=max(mergeADs_trrc['cver'])
+print('maxtrrccver:',maxtrrccver)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrccver=np.nanmean(mergeADs_trrc['cver'])
+print('meantrrccver:',meantrrccver)
+####################################################
+####################################################
+mintrrccvcvr=min(mergeADs_trrc['cvcvr'])
+print('mintrrccvcvr:',mintrrccvcvr)
+medtrrccvcvr=statistics.median(mergeADs_trrc['cvcvr'])
+print('medtrrccvcvr:',medtrrccvcvr)
+maxtrrccvcvr=max(mergeADs_trrc['cvcvr'])
+print('maxtrrccvcvr:',maxtrrccvcvr)
+mergeADs_trrcshp=mergeADs_trrc.shape
+numrecs_trrc=mergeADs_trrcshp[0]
+print('numrecs_trrc:',numrecs_trrc)
+meantrrccvcvr=np.nanmean(mergeADs_trrc['cvcvr'])
+print('meantrrccvcvr:',meantrrccvcvr)
+####################################################
+# mintrrcvlpm=min(mergeADs_trrc['varianceLPMages'])
+# print('mintrrcvlpm:',mintrrcvlpm)
+# medtrrcvlpm=statistics.median(mergeADs_trrc['varianceLPMages'])
+# print('medtrrcvlpm:',medtrrcvlpm)
+# maxtrrcvlpm=max(mergeADs_trrc['varianceLPMages'])
+# print('maxtrrcvlpm:',maxtrrcvlpm)
+# mergeADs_trrcshp=mergeADs_trrc.shape
+# numrecs_trrc=mergeADs_trrcshp[0]
+# print('numrecs_trrc:',numrecs_trrc)
+# meantrrcvlpm=np.nanmean(mergeADs_trrc['varianceLPMages'])
+# print('meantrrcvlpm:',meantrrcvlpm)
+# mergeADs_trrc=mergeADs.loc[mergeADs['Layer']=='TRRC']
+# mintrrcASLD=min(mergeADs_trrc['ASLD'])
+# print('mintrrcASLD:',mintrrcASLD)
+# medtrrcASLD=statistics.median(mergeADs_trrc['ASLD'])
+# print('medtrrcASLD:',medtrrcASLD)
+# maxtrrcASLD=max(mergeADs_trrc['ASLD'])
+# print('maxtrrcASLD:',maxtrrcASLD)
+# mergeADs_trrcshp=mergeADs_trrc.shape
+# numrecs_trrc=mergeADs_trrcshp[0]
+# print('numrecs_trrc:',numrecs_trrc)
+# meantrrcASLD=np.nanmean(mergeADs_trrc['ASLD'])
+# print('meantrrcASLD:',meantrrcASLD)
+# mintrrcage=min(mergeADs_trrc['xbPTbs'])
+# print('mintrrcage:',mintrrcage)
+# medtrrcage=statistics.median(mergeADs_trrc['xbPTbs'])
+# print('medtrrcage:',medtrrcage)
+# maxtrrcage=max(mergeADs_trrc['xbPTbs'])
+# print('maxtrrcage:',maxtrrcage)
+# mergeADs_trrcshp=mergeADs_trrc.shape
+# numrecs_trrc=mergeADs_trrcshp[0]
+# print('numrecs_trrc:',numrecs_trrc)
+# meantrrcvptn=np.nanmean(mergeADs_trrc['VARPTbsnum'])
+# print('meantrrcvptn:',meantrrcvptn)
+# medianvpttrrc=statistics.median(mergeADs_trrc['VARPTbsnum'])
+# print('mediantrrcvptn:',medianvpttrrc)
+
+print('\t')
+mergeADs_clbr=mergeADs.loc[mergeADs['Layer'].isin(['CLBR','CNZC','LCAQ','MCAQ','UCAQ'])]
+####################################################
+minclbrcvlpmad=min(mergeADs_clbr['cvlpmad'])
+print('minclbrcvlpmad:',minclbrcvlpmad)
+medclbrcvlpmad=statistics.median(mergeADs_clbr['cvlpmad'])
+print('medclbrcvlpmad:',medclbrcvlpmad)
+maxclbrcvlpmad=max(mergeADs_clbr['cvlpmad'])
+print('maxclbrcvlpmad:',maxclbrcvlpmad)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbrcvlpmad=np.nanmean(mergeADs_clbr['cvlpmad'])
+print('meanclbrcvlpmad:',meanclbrcvlpmad)
+####################################################
+####################################################
+minclbrcvptad=min(mergeADs_clbr['cvptad'])
+print('minclbrcvptad:',minclbrcvptad)
+medclbrcvptad=statistics.median(mergeADs_clbr['cvptad'])
+print('medclbrcvptad:',medclbrcvptad)
+maxclbrcvptad=max(mergeADs_clbr['cvptad'])
+print('maxclbrcvptad:',maxclbrcvptad)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbrcvptad=np.nanmean(mergeADs_clbr['cvptad'])
+print('meanclbrcvptad:',meanclbrcvptad)
+####################################################
+####################################################
+minclbrMER=min(mergeADs_clbr['MER'])
+print('minclbrMER:',minclbrMER)
+medclbrMER=statistics.median(mergeADs_clbr['MER'])
+print('medclbrMER:',medclbrMER)
+maxclbrMER=max(mergeADs_clbr['MER'])
+print('maxclbrMER:',maxclbrMER)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbrMER=np.nanmean(mergeADs_clbr['MER'])
+print('meanclbrMER:',meanclbrMER)
+####################################################
+####################################################
+minclbracvr=min(mergeADs_clbr['acvr'])
+print('minclbracvr:',minclbracvr)
+medclbracvr=statistics.median(mergeADs_clbr['acvr'])
+print('medclbracvr:',medclbracvr)
+maxclbracvr=max(mergeADs_clbr['acvr'])
+print('maxclbracvr:',maxclbracvr)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbracvr=np.nanmean(mergeADs_clbr['acvr'])
+print('meanclbracvr:',meanclbracvr)
+####################################################
+####################################################
+minclbrcver=min(mergeADs_clbr['cver'])
+print('minclbrcver:',minclbrcver)
+medclbrcver=statistics.median(mergeADs_clbr['cver'])
+print('medclbrcver:',medclbrcver)
+maxclbrcver=max(mergeADs_clbr['cver'])
+print('maxclbrcver:',maxclbrcver)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbrcver=np.nanmean(mergeADs_clbr['cver'])
+print('meanclbrcver:',meanclbrcver)
+####################################################
+####################################################
+minclbrcvcvr=min(mergeADs_clbr['cvcvr'])
+print('minclbrcvcvr:',minclbrcvcvr)
+medclbrcvcvr=statistics.median(mergeADs_clbr['cvcvr'])
+print('medclbrcvcvr:',medclbrcvcvr)
+maxclbrcvcvr=max(mergeADs_clbr['cvcvr'])
+print('maxclbrcvcvr:',maxclbrcvcvr)
+mergeADs_clbrshp=mergeADs_clbr.shape
+numrecs_clbr=mergeADs_clbrshp[0]
+print('numrecs_clbr:',numrecs_clbr)
+meanclbrcvcvr=np.nanmean(mergeADs_clbr['cvcvr'])
+print('meanclbrcvcvr:',meanclbrcvcvr)
+####################################################
+# minclbrvlpm=min(mergeADs_clbr['varianceLPMages'])
+# print('minclbrvlpm:',minclbrvlpm)
+# medclbrvlpm=statistics.median(mergeADs_clbr['varianceLPMages'])
+# print('medclbrvlpm:',medclbrvlpm)
+# maxclbrvlpm=max(mergeADs_clbr['varianceLPMages'])
+# print('maxclbrvlpm:',maxclbrvlpm)
+# mergeADs_clbrshp=mergeADs_clbr.shape
+# numrecs_clbr=mergeADs_clbrshp[0]
+# print('numrecs_clbr:',numrecs_clbr)
+# meanclbrvlpm=np.nanmean(mergeADs_clbr['varianceLPMages'])
+# print('meanclbrvlpm:',meanclbrvlpm)
+# mergeADs_clbr=mergeADs.loc[mergeADs['Layer'].isin(['CLBR','CNZC','LCAQ','MCAQ','UCAQ'])]
+# minclbrASLD=min(mergeADs_clbr['ASLD'])
+# print('minclbrASLD:',minclbrASLD)
+# medclbrASLD=statistics.median(mergeADs_clbr['ASLD'])
+# print('medclbrASLD:',medclbrASLD)
+# maxclbrASLD=max(mergeADs_clbr['ASLD'])
+# print('maxclbrASLD:',maxclbrASLD)
+# mergeADs_clbrshp=mergeADs_clbr.shape
+# numrecs_clbr=mergeADs_clbrshp[0]
+# print('numrecs_clbr:',numrecs_clbr)
+# meanclbrASLD=np.nanmean(mergeADs_clbr['ASLD'])
+# print('meanclbrASLD:',meanclbrASLD)
+# minclbrage=min(mergeADs_clbr['xbPTbs'])
+# print('minclbrage:',minclbrage)
+# minclbravr=min(mergeADs_clbr['avgVARres'])
+# print('minclbravr:',minclbravr)
+# medclbrage=statistics.median(mergeADs_clbr['xbPTbs'])
+# print('medclbrage:',medclbrage)
+# maxclbrage=max(mergeADs_clbr['xbPTbs'])
+# print('maxclbrage:',maxclbrage)
+# mergeADs_clbrshp=mergeADs_clbr.shape
+# numrecs_clbr=mergeADs_clbrshp[0]
+# print('numrecs_clbr:',numrecs_clbr)
+# meanclbrvptn=np.nanmean(mergeADs_clbr['VARPTbsnum'])
+# print('meanclbrvptn:',meanclbrvptn)
+# medianvptclbr=statistics.median(mergeADs_clbr['VARPTbsnum'])
+# print('medianclbrvptn:',medianvptclbr)
+# medianavrclbr=statistics.median(mergeADs_clbr['avgVARres'])
+# print('medianavrclbr:',medianavrclbr)
+# minclbrvvr=min(mergeADs_clbr['varVARres'])
+# print('minclbrvvr:',minclbrvvr)
+# minclbrver=min(mergeADs_clbr['varreseff'])
+# print('minclbrver:',minclbrver)
+# maxclbrvvr=max(mergeADs_clbr['varVARres'])
+# print('maxclbrvvr:',maxclbrvvr)
+# maxclbravr=max(mergeADs_clbr['avgVARres'])
+# print('maxclbravr:',maxclbravr)
+# medianverclbr=statistics.median(mergeADs_clbr['varreseff'])
+# print('medianverclbr:',medianverclbr)
+# maxclbrver=max(mergeADs_clbr['varreseff'])
+# print('maxclbrver:',maxclbrver)
+print('\t')
+
+mergeADs_wlcx=mergeADs.loc[mergeADs['Layer'].isin(['MWAQ','LWAQ','UWAQ'])]
+####################################################
+minwlcxcvlpmad=min(mergeADs_wlcx['cvlpmad'])
+print('minwlcxcvlpmad:',minwlcxcvlpmad)
+medwlcxcvlpmad=statistics.median(mergeADs_wlcx['cvlpmad'])
+print('medwlcxcvlpmad:',medwlcxcvlpmad)
+maxwlcxcvlpmad=max(mergeADs_wlcx['cvlpmad'])
+print('maxwlcxcvlpmad:',maxwlcxcvlpmad)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxcvlpmad=np.nanmean(mergeADs_wlcx['cvlpmad'])
+print('meanwlcxcvlpmad:',meanwlcxcvlpmad)
+####################################################
+####################################################
+minwlcxcvptad=min(mergeADs_wlcx['cvptad'])
+print('minwlcxcvptad:',minwlcxcvptad)
+medwlcxcvptad=statistics.median(mergeADs_wlcx['cvptad'])
+print('medwlcxcvptad:',medwlcxcvptad)
+maxwlcxcvptad=max(mergeADs_wlcx['cvptad'])
+print('maxwlcxcvptad:',maxwlcxcvptad)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxcvptad=np.nanmean(mergeADs_wlcx['cvptad'])
+print('meanwlcxcvptad:',meanwlcxcvptad)
+####################################################
+####################################################
+minwlcxMER=min(mergeADs_wlcx['MER'])
+print('minwlcxMER:',minwlcxMER)
+medwlcxMER=statistics.median(mergeADs_wlcx['MER'])
+print('medwlcxMER:',medwlcxMER)
+maxwlcxMER=max(mergeADs_wlcx['MER'])
+print('maxwlcxMER:',maxwlcxMER)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxMER=np.nanmean(mergeADs_wlcx['MER'])
+print('meanwlcxMER:',meanwlcxMER)
+####################################################
+####################################################
+minwlcxacvr=min(mergeADs_wlcx['acvr'])
+print('minwlcxacvr:',minwlcxacvr)
+medwlcxacvr=statistics.median(mergeADs_wlcx['acvr'])
+print('medwlcxacvr:',medwlcxacvr)
+maxwlcxacvr=max(mergeADs_wlcx['acvr'])
+print('maxwlcxacvr:',maxwlcxacvr)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxacvr=np.nanmean(mergeADs_wlcx['acvr'])
+print('meanwlcxacvr:',meanwlcxacvr)
+####################################################
+####################################################
+minwlcxcver=min(mergeADs_wlcx['cver'])
+print('minwlcxcver:',minwlcxcver)
+medwlcxcver=statistics.median(mergeADs_wlcx['cver'])
+print('medwlcxcver:',medwlcxcver)
+maxwlcxcver=max(mergeADs_wlcx['cver'])
+print('maxwlcxcver:',maxwlcxcver)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxcver=np.nanmean(mergeADs_wlcx['cver'])
+print('meanwlcxcver:',meanwlcxcver)
+####################################################
+####################################################
+minwlcxcvcvr=min(mergeADs_wlcx['cvcvr'])
+print('minwlcxcvcvr:',minwlcxcvcvr)
+medwlcxcvcvr=statistics.median(mergeADs_wlcx['cvcvr'])
+print('medwlcxcvcvr:',medwlcxcvcvr)
+maxwlcxcvcvr=max(mergeADs_wlcx['cvcvr'])
+print('maxwlcxcvcvr:',maxwlcxcvcvr)
+mergeADs_wlcxshp=mergeADs_wlcx.shape
+numrecs_wlcx=mergeADs_wlcxshp[0]
+print('numrecs_wlcx:',numrecs_wlcx)
+meanwlcxcvcvr=np.nanmean(mergeADs_wlcx['cvcvr'])
+print('meanwlcxcvcvr:',meanwlcxcvcvr)
+sys.exit()
+####################################################
+# minwlcxvlpm=min(mergeADs_wlcx['varianceLPMages'])
+# print('minwlcxvlpm:',minwlcxvlpm)
+# medwlcxvlpm=statistics.median(mergeADs_wlcx['varianceLPMages'])
+# print('medwlcxvlpm:',medwlcxvlpm)
+# maxwlcxvlpm=max(mergeADs_wlcx['varianceLPMages'])
+# print('maxwlcxvlpm:',maxwlcxvlpm)
+# mergeADs_wlcxshp=mergeADs_wlcx.shape
+# numrecs_wlcx=mergeADs_wlcxshp[0]
+# print('numrecs_wlcx:',numrecs_wlcx)
+# meanwlcxvlpm=np.nanmean(mergeADs_wlcx['varianceLPMages'])
+# print('meanwlcxvlpm:',meanwlcxvlpm)
+# minwlcxASLD=min(mergeADs_wlcx['ASLD'])
+# print('minwlcxASLD:',minwlcxASLD)
+# medwlcxASLD=statistics.median(mergeADs_wlcx['ASLD'])
+# print('medwlcxASLD:',medwlcxASLD)
+# maxwlcxASLD=max(mergeADs_wlcx['ASLD'])
+# print('maxwlcxASLD:',maxwlcxASLD)
+# mergeADs_wlcxshp=mergeADs_wlcx.shape
+# numrecs_wlcx=mergeADs_wlcxshp[0]
+# print('numrecs_wlcx:',numrecs_wlcx)
+# meanwlcxASLD=np.nanmean(mergeADs_wlcx['ASLD'])
+# print('meanwlcxASLD:',meanwlcxASLD)
+# sys.exit()
+# minwlcvptn=min(mergeADs_wlcx['VARPTbsnum'])
+# minwlcxvpt=min(mergeADs_wlcx['VARPTbs'])
+# print('minwlcxvpt:',minwlcxvpt)
+# print('minwlcxvpt:',minwlcvptn)
+# medwlcxage=statistics.median(mergeADs_wlcx['xbPTbs'])
+# print('medwlcxage:',medwlcxage)
+# maxwlcxage=max(mergeADs_wlcx['xbPTbs'])
+# print('maxwlcxage:',maxwlcxage)
+# mergeADs_wlcxshp=mergeADs_wlcx.shape
+# numrecs_wlcx=mergeADs_wlcxshp[0]
+# print('numrecs_wlcx:',numrecs_wlcx)
+# meanwlcxvptn=np.nanmean(mergeADs_wlcx['VARPTbsnum'])
+# print('meanwlcxvptn:',meanwlcxvptn)
+# medianvptwlcx=statistics.median(mergeADs_wlcx['VARPTbsnum'])
+# print('medianwlcxvptn:',medianvptwlcx)
+print('\t')
+GWSgrp=mergeADs.groupby('GWSys')
+print('Thank You!')
+###########################################################################################
+###########################################################################################
+###########################################################################################
+#cvPT v cvLPM
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['cvptad'], group['cvlpmad'], label=name, marker = 'o', linestyle='')
+	#ax.plot(group['cvlpmad'], group['cvptad'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Coefficient of variation of particle tracking age distribution')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Coefficient of variation of tracer age distribution')
+ax.legend()
+plt.savefig(os.path.join('plots','cvPT_cvLPM_2175_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+###########################################################################################
+#ACVRvCVLPM
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['acvr'], group['cvlpmad'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Average coefficient of variation of resistivity')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Coefficient of variation of tracer age distribution')
+ax.legend()
+plt.savefig(os.path.join('plots','acvr_cvLPM_2175_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['cver'], group['cvlpmad'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Coefficient of variation of effective resistivity')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Coefficient of variation of tracer age distribution')
+ax.legend()
+plt.savefig(os.path.join('plots','cVeR_cvLPM_2175_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['cvcvr'], group['cvlpmad'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Coefficient of variation of coefficient of variation of resistivity')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Coefficient of variation of tracer age distribution')
+ax.legend()
+plt.savefig(os.path.join('plots','cVcVR_cvLPM_2175_byaq.png'))
+plt.close()
+print('Thank You!')
+sys.exit()
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+###########################################################################################
+###########################################################################################
+#''SNvarlogreseff''
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varreseff'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['VARPTbsnum'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Variance of effective resistivity, (Ohm-meters) squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','VRE_VPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['avgVARres'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['VARPTbsnum'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Average variance of resistivity, (Ohm-meters) squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','AVR_VPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varVARres'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['VARPTbsnum'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Variance of variance of resistivity, (Ohm-meters) to the fourth power')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','VVR_VPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+sys.exit()
+###########################################################################################
+#LPMa v PTa
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['meanAgeWeightedAvg'], group['xbPTbs'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylabel('Mean of particle tracking age distribution, years')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_xlabel('Mean of tracer age distribution, years')
+ax.legend()
+plt.savefig(os.path.join('plots','meanAgeWeightedAvg_vPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+###########################################################################################
+###########################################################################################
+###########################################################################################
+#LPMmeanage v PTa
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['LPMmeanage'], group['xbPTbs'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylabel('Mean of particle tracking age distribution, years')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_xlabel('Mean of tracer age distribution, years')
+ax.legend()
+plt.savefig(os.path.join('plots','LPMmeanage_vPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+###########################################################################################
+###########################################################################################
+#varLPM v varPT
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varianceLPMages'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_xlabel('Variance of tracer age distribution, years squared')
+ax.legend()
+#plt.savefig(os.path.join('plots','vLPM_vPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+###########################################################################################
+#''SNvarlogreseff''
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varreseff'], group['varianceLPMages'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Variance of effective resistivity, (Ohm-meters) squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of tracer age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','VRE_vLPM_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['avgVARres'], group['varianceLPMages'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Average variance of resistivity, (Ohm-meters) squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of tracer age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','AVR_vLPM_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varVARres'], group['varianceLPMages'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['varianceLPMages'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Variance of variance of resistivity, (Ohm-meters) to the fourth power')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of tracer age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','VVR_vLPM_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+sys.exit()
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+###########################################################################################
+###########################################################################################
+#''SNvarlogreseff''
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varreseff'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['VARPTbsnum'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Variance of effective resistivity, (Ohm-meters) squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','VRE_VPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['avgVARres'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['VARPTbsnum'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Average variance of resistivity, (Ohm-meters) squared')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','AVR_VPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################
+fig, ax = plt.subplots()
+for name,group in GWSgrp:
+	ax.plot(group['varVARres'], group['VARPTbsnum'], label=name, marker = 'o', linestyle='')
+	# ax.set_ylim(group['mrva_ymin'],0)
+# ax.plot(mergeADs['varlogreseff'], mergeADs['VARPTbsnum'], marker = 'o', linestyle='')
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_xlabel('Variance of variance of resistivity, (Ohm-meters) to the fourth power')
+#ax.set_xlabel('Variance of effective resistivity, in Ohms squared - meters squared')
+ax.set_ylabel('Variance of particle tracking age distribution, years squared')
+ax.legend()
+plt.savefig(os.path.join('plots','VVR_VPT_12184_byaq.png'))
+plt.close()
+print('Thank You!')
+#sys.exit()
+print('avlrsn_vlpmsn1154 plotted with log axes. Thank You!')
+###########################################################################################

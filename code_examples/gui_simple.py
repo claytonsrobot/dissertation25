@@ -55,7 +55,7 @@ from src.directories import Directories
 #pd.options.display.max_rows = None
 
 standardTextSize=6 # doesn't do anything
-script_dir = Directories.get_core_dir()
+script_dir = Directories.get_src_dir()
 default_data_directory = r"D:\Documents_main\Work\Pavlov\data_sources\SOCEM_data_2022_simple"
 
 default_export_directory = r"C:/Users/clayton/Downloads" # not used, sent to temp instead

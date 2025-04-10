@@ -1,10 +1,11 @@
 # __main__.py
-from shell import main
+from shell import shell 
 
 def cli_entry():
+    
     try:
         # Launch the cmd2 terminal
-        main()
+        shell.start_shell()
     except Exception as e:
         print(f"An error occurred: {e}")
 

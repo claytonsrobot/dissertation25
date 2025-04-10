@@ -1,10 +1,10 @@
 # __main__.py
-from src import main
+from shell import shell
 from pprint import pprint as pprint
 def cli_entry():
     try:
         # Launch main
-        src.main.run()()
+        shell.start_shell()
         #shell.shell.main()
     except Exception as e:
         print(f"An error occurred: {e}")

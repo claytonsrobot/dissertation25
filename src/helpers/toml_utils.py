@@ -14,8 +14,8 @@ else:
     
 def load_toml(filepath):
     if check_file(filepath):
-        #with open(filepath,"r", encoding="utf-8") as f:
-        with open(filepath,"rb", encoding="utf-8") as f:
+        with open(filepath,"r", encoding="utf-8") as f:
+        #with open(filepath,"rb", encoding="utf-8") as f:
             if sys.version_info >= (3,11):
                 data = tomllib.load(f)
             else:

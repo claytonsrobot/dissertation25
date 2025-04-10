@@ -1,0 +1,40 @@
+{
+	"column pairs": [
+		{
+			"template column":"tracer-based age coefficient of variation”,
+			"csv column":"cvlpmad”,
+			"csv file": "mads4lpmstats.csv",
+			"refnumber": 0
+		},
+		{
+			"template column":"particle tracking-based age coefficient of variation”,
+			"csv column": "cvlptad”,
+			"csv file": "mads4ptstats.csv",
+			"refnumber": 1
+		},
+		{
+			"template column":"average coefficient of variation of resistivity”,
+			"csv column": "acvr”,
+			"csv file": "mads4resstats.csv",
+			"refnumber": 2
+		},
+		{
+			"template column":"coefficient of variation of coefficient of variation of resistivity”,
+			"csv column": "cvcvr”,
+			"csv file": "mads4resstats.csv",
+			"refnumber": 3
+		},
+		{
+			"template column":"coefficient of variation of effective resistivity”,
+			"csv column": "cver”,
+			"csv file": "mads4resstats.csv",
+			"refnumber": 4
+		},
+		{
+			"template column":"mean effective resistivity”,
+			"csv column": "MER”,
+			"csv file": "mads4resstats.csv",
+			"refnumber": 4
+		}
+	]
+}

@@ -10,19 +10,21 @@ It might be good to have one config file driving the others?
 Resources: 
 https://medium.com/@noransaber685/simple-guide-to-creating-a-command-line-interface-cli-in-python-c2de7b8f5e05
 '''
+
 import cmd2
 import os
 import pprint
-from src import main
+#from src import main
 from src.hidden_prints import HiddenPrints
+import src.pavlovmain
 import time
 from datetime import datetime
 #import subprocess
-from sparklines import sparklines
+#from sparklines import sparklines
 #import gui_customtk_basic
 from src.filemanagement import DirectoryControl
 from src import filemanagement as fm
-from src import environmental
+import src.environment
 #import copy
 import importlib
 import ast
@@ -32,7 +34,7 @@ import sys
 #print(sys.path)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from tests import Test
-from src import toml_utils # pleae migrate the json-handler.py
+from src.helpers import toml_utils
 
 from src.directories import Directories
 try:
@@ -41,9 +43,6 @@ except:
     pass
 
 from src.datapoint import DataPoint
-
-
-
 
 class HistoryEntry:
     """Custom history item to store and display commands properly."""
@@ -58,25 +57,9 @@ class HistoryEntry:
         "return self.command"
         return f"{'-'}: {self.command}"
 
-    
-class PavlovCLI(cmd2.Cmd):
-    pavlov3d_prettyprint =  """
-     ____             _            _____ ____
-    |  _ \ __ ___   _| | _____   _|___ /|  _ \\
-    | |_) / _` \ \ / / |/ _ \ \ / / |_ \| | | |
-    |  __/ (_| |\ V /| | (_) \ V / ___) | |_| |
-    |_|   \__,_| \_/ |_|\___/ \_/ |____/|____/
 
-    """
-    prompt = '>> '
-    intro = pavlov3d_prettyprint + \
-    '''
     
-    Welcome to PavlovShell! 
-    Type "help" or "h" to see available commands. 
-    Type "instructions" or "i" to see a description of workflow.
-    Type "gui" or "g" to launch the Graphical User Interface.
-    '''
+class PalovianCLI(cmd2.Cmd):
 
     scene_object = None
     style_object = None
@@ -92,17 +75,12 @@ class PavlovCLI(cmd2.Cmd):
     last_export_path = None
     all_export_paths = []
 
-
-    name = "Pavlov3D Command Line Interface"
+    name = f"Dissertation25 Command Line Interface"
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Determine the path to the startup script
-        base_dir = os.path.dirname(os.path.dirname(__file__))  # One level up
-        #base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))  # Two levels up
-        #startup_script_path = os.path.join(base_dir, "startup", "shell_startup.txt")
         startup_script_path = os.path.join("startup", "shell_startup.txt") # "relative path"
-        
-        
+    
         self.add_settable(cmd2.Settable('DataPoint', object, 'The DataPoint class, imported in main and accessible in the shell.', DataPoint))
         
         # Check if the file exists before setting it
@@ -187,8 +165,6 @@ class PavlovCLI(cmd2.Cmd):
         self.poutput("  python 2 + 2")
         self.poutput("  python x = 5")
 
-
-    
     
     @classmethod
     def initialize_scene_object(cls):
@@ -196,7 +172,7 @@ class PavlovCLI(cmd2.Cmd):
     @classmethod
     def link_initial_project_directory(cls):
         #cls.project_active = None
-        Directories.set_project_dir(Directories.get_core_dir()+r"/projects/sample/")
+        Directories.set_project_dir(Directories.get_src_dir()+r"/projects/sample/")
         print(f"project_active = {Directories.get_project_dir()}")
         # dynamic, points to default-project.json file
         #cls.set_project_active(cls.get_startup_project("./projects/default-project.json")) # pull from config file
@@ -204,7 +180,6 @@ class PavlovCLI(cmd2.Cmd):
     
     @classmethod
     def set_project_active(cls,project_dir):
-        #cls.project_active = project_dir
         Directories.set_project_dir(project_dir)
         print(f"Directories.set_project_dir() = {Directories.get_project_dir()}")
     
@@ -251,6 +226,8 @@ class PavlovCLI(cmd2.Cmd):
         for i, item in enumerate(self.history, start=1):
             self.poutput(repr(str(item)))  # Use string representation to ensure compatibility
 
+    
+
 
     def run(self):
         #self.scene_object = None
@@ -272,55 +249,6 @@ class PavlovCLI(cmd2.Cmd):
         createFBX_object: {self.createFBX_object != None} :: 6
         """)
 
-    def do_example(self, line):
-        "Show example image of a model."
-        pass
-
-    def do_m(self,line):
-        """
-        Abbreviation for make.
-        Examples:
-            m scene
-            m config
-        """
-        self.do_make(line)
-
-    def do_make(self,line):
-        "The bread and butter. Hint: make scene, or, m scene."
-        if line == "scene":
-            self.make_scene(None)
-        elif line == "config":
-            self.makeconfig(None)
-        elif line == "skipinterface":
-            self.do_skipinterface(None)
-        elif line == "data":
-            self.import_data(None)
-        elif line == "pointcloud":
-            self.build_pointcloud(None)
-        elif line == "export":
-            self.do_export("fbx")
-        elif line == "all":
-            self.do_main(None)
-        elif line =="":
-            print("""
-            Make what? 
-            
-            Proper usage examples: 
-                make scene
-                make config
-                make skipinterface
-                make data
-                make pointcloud
-                make export
-                  
-            "make all" is the same as running "main"
-            """) 
-        else:
-            print(f"*** Unknown syntax: {line}")
-
-    def do_launch(self,line):
-        "Futurework. Inteded to use for launching various GUI options. It would be better to just call gui."
-        pass
 
     def do_h(self,line):
         """
@@ -337,88 +265,13 @@ class PavlovCLI(cmd2.Cmd):
         self.do_instructions(line)
         
     def do_instructions(self,line):
-        """run 'instructons' to see step-by-step instructions for more control
-        Options: basic, b, advanced, adv, a, viewer, view, v")
-        Examples:
-            i a
-            i
-            instructions
-            i basic
-            i adv
         """
-        ex = \
-        '''
-        Options: basic, b, advanced, adv, a, viewer, view, v")
-        Examples:
-            i a
-            i
-            instructions
-            i basic
-            i adv
-        '''
-        basic =\
-        '''
-        Basic:
-            Run {"main"} to run the program, 
-            from beginning to end, with default settings.
-            
-            The program inputs will be based 
-            on the JSON configuration file that 
-            is identified in config_entry.json, 
-            in the config_input_filename variable.
-            Use command "where" to see the program directory.
-        '''
-        advanced = \
-        '''
-        Advanced:
-            Instead of running "main", you can instead run these commands, in this order:
-            1. "make scene"
-            2. "make config"
-            3. "skipinterface"
-            4. "import data"
-            5. "make pointcloud"
-            6. "make model"
- 
-        Advanced Numeric:
-            Run the only numbers from the Advanced commands.
-            Example: "1"
-            You can run the program by running 1, 2, 3, 4, 5, 6 separately and in succession.
-        '''
-        speedrun =\
-        '''
-        Speedrun (without print statements):
-            A. "prep": same as (1) make scene and (2) make config
-            B. "no": same as (3) skipinterface
-            C. "go": same as (4) make data, (5) make pointcloud, and (6) make export
-        '''
-        
-        if line == "" or line ==None:
-            #print(ex)
-            print(basic)
-            print(advanced)
-            #print(speedrun)
-            self.do_viewer(None)
-        elif line =="basic" or line =="b":
-            #print(ex)
-            print(basic)
-        elif line =="advanced" or line =="adv" or line =="a":
-            #print(ex)
-            print(advanced)
-        elif line =="speedrun" or line =="speed" or line =="s":
-            #print(ex)
-            print(speedrun)
-        elif line == "viewer" or line == "view" or line == "v":
-            self.do_viewer(None)
+        run 'instructons' or 'i' to see instructions. 
+        i
+        """
+        instructions = "Talk to Clayton."
+        print(instructions)
 
-    def do_viewer(self,line):
-        view =\
-        '''
-        To open FBX models generated by Pavlov 3D as they are intended, 
-        download and install CAD Assistant by Open Cascade.
-        https://www.opencascade.com/products/cad-assistant/
-        '''
-        print(view)
-        
     def do_where(self,line):
         "Print working directory location. This is where import and export files are managed." 
         try:
@@ -427,7 +280,7 @@ class PavlovCLI(cmd2.Cmd):
             
         except Exception as e: 
             print("Scene not yet created. Run (1) make scene.")
-        dev_location = "Pavlov 3D was proudly developed in:\nThe United States, New Zealand, Thailand, Laos, Vietnam, Australia, & Japan."
+        dev_location = "Memphis, Tennessee, 38104"
         print(dev_location)
 
     def do_when(self,line):
@@ -446,14 +299,7 @@ class PavlovCLI(cmd2.Cmd):
         except Exception as e: 
             print("Scene not yet created. Run (1) make scene.")
         print(f"Date time now: {str(datetime.fromtimestamp(float(int(time.time()))))}")
-    def do_who(self,line):
-        "Who created this?"
-        
-        #whoami = subprocess.run(["whoami"], capture_output = True, text = True)
-        #print(f"whoami: {whoami.stdout.strip()}")
-        
-        shortcredit = "Clayton Bennett, 2022-2025.\nPavlov Software & Services LLC, incorportated 2023."
-        print(shortcredit)
+
 
     def do_test(self,line):
         "See CPU frequency."
@@ -480,8 +326,8 @@ class PavlovCLI(cmd2.Cmd):
             self.onecmd_plus_hooks(cmd)
 
     def do_why(self,line):
-        "Why use Pavlov?"
-        why = "Visualize lots of raw data. \nIdeal for first-year graduate students after they finish their experiements. \nSee all of your data, everything at once to reveal untold truths." 
+        "Why?"
+        why = "Dissertations are hard." 
         print(f"{why}")
 
     def do_how(self,line):
@@ -507,16 +353,8 @@ class PavlovCLI(cmd2.Cmd):
     def do_futurework(self,line):
         "See futurework."
         fw = """
-        Project generation and motion between projects
-        PDF guide to onfiguration and workflow, and CLI commands
-        Group naming problems - no groups should be required.
-        Multiple column assignment. example - column_height: "1:4"  
-"        Generate .blend file
-        Generate threejs model
-        Generate GIS model
-        Generate .fig for Matlab
-        Improve main.prepare_export_directory() to include selection.
-        Move Group Title to bottom, (for easier rotation and finding)
+        Task1, task2, task 3.
+        Three weeks to glory.
         """
         print(fw)
 
@@ -545,7 +383,7 @@ class PavlovCLI(cmd2.Cmd):
         print('Running Pavlov....')
         print('Have fun, and may the odds be ever in your favor.')
         #global scene_object
-        self.scene_object, self.hierarchy_object, self.createFBX_object = main.main()
+        self.scene_object, self.hierarchy_object, self.createFBX_object = src.pavlovmain.main()
         #self.hierarchy_object = copy.deepcopy(self.scene_object.hierarchy_object)
         self.record_export_path()
 
@@ -579,7 +417,7 @@ class PavlovCLI(cmd2.Cmd):
         "Instead of running main.main(), independantly make the scene."
         #global scene_object
         request = None
-        scene_object,style_object,hierarchy_object = main.set_up(request)
+        scene_object,style_object,hierarchy_object = src.pavlovmain.set_up(request)
         self.scene_object,self.style_object,self.hierarchy_object = scene_object,style_object,hierarchy_object
         #scene_object = self.scene_object
         print('Built: scene, style, hierarchy')
@@ -590,7 +428,7 @@ class PavlovCLI(cmd2.Cmd):
         "Independantly generate config_input_object & user_input_object"
         try:
             self.config_input_object,self.user_input_object = \
-                main.get_configuration(self.scene_object,
+                src.pavlovmain.get_configuration(self.scene_object,
                                     self.style_object)
             print("make config, done")
         except Exception as e:
@@ -599,108 +437,6 @@ class PavlovCLI(cmd2.Cmd):
             self.makeconfig(None)
         print("Hint: Next: (3) skipinterface")
 
-
-    def do_s(self,line):
-        "Shorthand for see. Example: s scene"
-        self.do_see(line)
-
-    def do_see(self,line):
-        """
-        See certain dictionaries.
-
-        Examples:
-            see scene
-            see style
-            see config
-            see userinput
-            see hierarchy
-            see exportcontrol
-            see createFBX
-            s c
-            s u
-            s h
-            s ec
-            s sc
-            s st
-            
-        'see scene' is the same as 'eval scene_object -d' 
-        """ 
-        try:
-            if line=="config" or line=="c":
-                print(f"config_input_object = ")
-                pprint.pprint(self.config_input_object.__dict__)
-            elif line=="userinput" or line=="u":
-                print(f"user_input_object = ")
-                pprint.pprint(self.user_input_object.__dict__)
-            elif line=="scene" or line=="sc" or line=="s":
-                print(f"scene_object = ")
-                pprint.pprint(self.scene_object.__dict__)
-            elif line=="style" or line=="st":
-                print(f"style_object = ")
-                pprint.pprint(self.style_object.__dict__)
-            elif line=="hiearchy" or line=="h":
-                print(f"hierarchy_object = ")
-                pprint.pprint(self.hierarchy_object.__dict__)
-            elif line=="exportcontrol" or line=="ec":
-                print(f"export_control_object = ")
-                pprint.pprint(self.export_control_object.__dict__)
-            elif line=="createFBX":
-                print(f"createFBX_object = ")
-                pprint.pprint(self.createFBX_object.__dict__)
-            elif line == "":
-                self.do_help("see")
-            else:
-                print("see input is unknown")
-        except:
-            print("Unable to fulfill request. The variable you're looking for may not exist yet. Hint: i")
-            pass
-    
-        
-    """
-    def do_launch_default_interface(self,line):
-        "Independantly determine the gui_object (or lack thereof, if use_gui is None)"
-        self.interface_object = main.determine_interface(self.style_object,
-                                        self.config_input_object,
-                                        self.user_input_object)
-        launch_interface()
-    """
-    """ 
-    def launch_interface(self):
-        main.run_interface(self.style_object,
-                           self.interface_object,
-                            self.user_input_object,
-                            self.config_input_object)
-    """
-    """    
-    def do_simple(self,line):
-    #def do_launch_simple(self,line):
-        if self.scene_object is None:
-            self.do_prep(None)
-        "launch the simple gui, regardless of default interface"
-        from gui_simple import Gui
-        self.interface_object = Gui()
-        self.launch_interface()
-    """
-
-    """    
-    def do_dev(self,line):
-    #def do_launch_gui_developer(self,line):
-        if self.scene_object is None:
-            self.do_prep(None)
-        "launch the developer gui, regardless of default interface"
-        from gui import Gui
-        self.interface_object = Gui()
-        self.launch_interface()
-    """
-
-    """
-    def do_cli(self,line):
-    #def do_launch_control_cli(self,line):
-        "launch the separate control CLI, regardless of default interface"
-        from control_cli import ControlCLI
-        self.interface_object = ControlCLI()
-        self.launch_interface()
-    """
 
     def do_prep(self,line):
         "Run (1) make scene and (2) make config. Hide print."
@@ -747,7 +483,7 @@ class PavlovCLI(cmd2.Cmd):
         
         #try:
         print(f"\nself.scene_object = {self.scene_object}")
-        self.export_control_object = main.import_data(self.scene_object,
+        self.export_control_object = src.pavlovmain.import_data(self.scene_object,
                                                 self.style_object,
                                                 self.user_input_object,
                                                 self.hierarchy_object)
@@ -757,22 +493,15 @@ class PavlovCLI(cmd2.Cmd):
         #    print("If the import fails for pyinstaller, ensure that the import plugin is registered in style.py")
         #    print("Failed to import data. See instructions for necessary steps.")
         
-    """
-    def do_preview2d(self,line):
-        "Independantly generate png of imported data"                                                                   
-        main.png_preview(self.scene_object,
-                         self.user_input_object,
-                         self.export_control_object.export_name)
-    """
 
     def build_grouping(self,line):
         # jam in do_3(None), skipinterface for now
-        main.build_grouping(self.hierarchy_object,self.user_input_object,loaded_grouping = self.config_input_object.loaded_grouping)
+        src.pavlovmain.build_grouping(self.hierarchy_object,self.user_input_object,loaded_grouping = self.config_input_object.loaded_grouping)
 
     def build_pointcloud(self,line):
         "Independantly build the point cloud"  
         #try:
-        main.build_point_cloud(self.scene_object,
+        src.pavlovmain.build_point_cloud(self.scene_object,
                             self.style_object,
                             self.user_input_object,
                             self.hierarchy_object)
@@ -791,11 +520,6 @@ class PavlovCLI(cmd2.Cmd):
         #    pass
 
     
-    """
-    def do_preview3d(self,line):
-        "Independantly generate scene preview in PyGame"                  
-        main.preview_scene(scene_object)
-    """
     def do_export(self,line):
         """
         Generate export. 
@@ -831,7 +555,7 @@ class PavlovCLI(cmd2.Cmd):
     def export_model(self,line):
         "Independantly generate export" 
     
-        self.createFBX_object = main.generate_export(self.scene_object,
+        self.createFBX_object = src.pavlovmain.generate_export(self.scene_object,
                             self.style_object,
                             self.user_input_object)
         return self.createFBX_object
@@ -839,45 +563,6 @@ class PavlovCLI(cmd2.Cmd):
         #    print("See instructions for necessary steps.")
     ''' End main. element access'''
     
-
-    #eval_parser = cmd2.Cmd2ArgumentParser()
-    #eval_parser.add_argument("-d","--dict", nargs = "?", default=False, const=True, help ="See dictionary of object")
-    #eval_parser.add_argument("-k","--keys", nargs = "?", default=False, const=True, help ="See Keys of object")
-    #@cmd2.with_argparser(eval_parser)
-    """
-    def do_eval2(self,line):
-        '''
-        See known variables. Use -d flag to see dictionary. 
-        Examples:
-            eval scene_object -d
-            eval scene_object.exportdir
-            eval scene_object --keys
-            eval scene_object -k
-
-        Security issue.
-        '''
-        try:
-            if line == "--all" or line =="-a":
-                pprint.pprint(eval("self.__dict__"))
-            elif not("-d" in line) and not("-k" in line):
-                pprint.pprint(eval("self."+line))
-            elif "-d" in line:
-                line_clean = line.replace("-d","")
-                pprint.pprint(eval("self."+line_clean+".__dict__"))
-            elif "-k" in line:
-                
-                line_clean = line.replace("-k","")
-                print("keys for line_clean:")
-                #pprint.pprint(eval("self."+line_clean+".keys()"))
-                key_list = list(eval("self."+line_clean+".__dict__.keys()"))
-                pprint.pprint(key_list)
-        except Exception as e:
-            print(f"self.{line} is not a known variable")
-            """
-
-    #def do_e(self,line):
-    #   print(eval(line))
-
     config_parser = cmd2.Cmd2ArgumentParser()
     config_parser.add_argument('-l','--list',nargs = "?", default=False, const=True, help='See all project directories that are in the Pavlov program location. This will not include project diretories saved elsewhere, until some future date when a registration file will track those recent locations.')
     config_parser.add_argument('-le','--listexternal',nargs = "?", default=False, const=True, help='see project directories in the external-project-register.json file') 
@@ -912,7 +597,7 @@ class PavlovCLI(cmd2.Cmd):
         return true
         
     def do_quit(self,line):
-        "Quit Pavlov CLI."
+        "Quit the CLI."
         return True # returning true quits the program
     
     def do_documentation(self,line):
@@ -921,7 +606,7 @@ class PavlovCLI(cmd2.Cmd):
         print("Future work.")
 
     def do_license(self,line):
-        "See the license for Pavlov. BSD 3-clause."
+        "See the license. BSD 3-clause."
         bsd3 = """
         Copyright 2025 George Clayton Bennett
 
@@ -935,29 +620,12 @@ class PavlovCLI(cmd2.Cmd):
 
         THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         """
-        autodesk_clause = """
-        Autodesk Clause:
-        This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2008 Autodesk, Inc. All rights, reserved. Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, whether express or implied, including without limitation the implied warranties of merchantability, fitness for a particular purpose or non-infringement of third party rights. In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of such code.
-        """
         print(bsd3)
-        print(autodesk_clause)
 
     def do_copyright(self,line):
         "See copyright information."
         cr = """\
         Copyright 2025 George Clayton Bennett
-
-        Autodesk Clause:
-        This software contains Autodesk® FBX® code developed by Autodesk, Inc. 
-        Copyright 2008 Autodesk, Inc. All rights, reserved. 
-        Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, 
-        whether express or implied, including without limitation the implied warranties of merchantability, 
-        fitness for a particular purpose or non-infringement of third party rights.
-        In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, 
-        or consequential damages (including, but not limited to, procurement of substitute goods or services; 
-        loss of use, data, or profits; or business interruption) however caused and on any theory of liability, 
-        whether in contract, strict liability, or tort (including negligence or otherwise) 
-        arising in any way out of such code.
         """
         
         print(cr)
@@ -966,106 +634,12 @@ class PavlovCLI(cmd2.Cmd):
         "see credits"
         credit =\
         """
-        Clayton Bennett, 2022-2025.
+        Clayton Bennett, 2025
         Pavlov Software & Services LLC, incorportated 2023.
-
-        The Pavlov Project began at the University of Idaho, at the AgMEQ Laboratory.
-        Sample data comes courtesy of Dr. Daniel Robertson.
-        
-        Pavlov 3D was proudly developed in the United States, New Zealand, Thailand, Laos, Vietnam, Australia, and Japan.
-
-        For software tools, thank you to:
-        The Python Software Foundation
-        The Blender Software Foundation
-        Autodesk
-        MathWorks
-        Open Cascade
-        Khronos Group
-        Don McCurdy (https://gltf-viewer.donmccurdy.com/)
-        
-        Pavlov 3D development for 2022-2025 was funded by:
-        Dr. Daniel Robertson of the AgMEQ Laboratory at the University of Idaho in Moscow, Idaho, USA
-        Mike & Rebecca McKee of Remarkable Motorcycles in Queenstown, Otago, New Zealand
-        Dale & Bronwyn Burrows of Franz Josef Wilderness Tours in Franz Josef, West Coast, New Zealand
-        SWP Commercial Roofing in Christchurch, Canterbury, New Zealand
-        Pete Syme of Alchemy All Metal Fabricators in Cairns, Queensland, Australia
-        City of Memphis in Memphis, Tennessee, USA
-
-        Autodesk Clause (required):
-        This software contains Autodesk® FBX® code developed by Autodesk, Inc. 
-        Copyright 2008 Autodesk, Inc. All rights, reserved. 
-        Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, 
-        whether express or implied, including without limitation the implied warranties of merchantability, 
-        fitness for a particular purpose or non-infringement of third party rights.
-        In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, 
-        or consequential damages (including, but not limited to, procurement of substitute goods or services; 
-        loss of use, data, or profits; or business interruption) however caused and on any theory of liability, 
-        whether in contract, strict liability, or tort (including negligence or otherwise) 
-        arising in any way out of such code.
-
-        The Autodesk FBX SDK can be obtained for Mac, Linux, or Windows at this URL:
-        https://aps.autodesk.com/developer/overview/fbx-sdk
         """
         self.pretty_title(None)
         print(credit)
     
-    def do_g(self,line):
-        self.do_guic(line)
-
-    ## Not useful, customtkinter is dead, error showing. 
-    ## pip install freesimplegui
-    ## import freesimplegui as psg
-    # def do_gui(self,line):
-    #     """
-    #     Launch GUI. Futurework.
-    #     Defaults to developer mode. Dependency: PySimpleGui. Secondary: TKinter.
-    #     For basic mode, use flag: -b. For developer mode, use flag: -d
-    #     """
-    #     print("Starting the GUI.")
-    #     print("To continue using the CLI, quit the GUI.")
-    #     try:
-    #         app = gui_customtk_basic.App()
-    #         app.pass_in_cli_object(self)
-    #         #app = App()
-    #         app.mainloop()
-    #         #app.quit()
-            
-    #         if self.style_object.use_GUI is True:
-    #             do_launch_gui = str(input("Do you want to launch the Pavlov GUI? (y/N)"))
-    #             if do_launch_gui.lower() == "y":
-    #                 self.do_select_gui_mode() # this is outdated CB 14Dec24 
-    #     except:
-    #         pass
-        
-    
-    
-    def do_guic(self,line):
-        "Wokin progress. Run classic developer mode FreeSimpleGUI."
-        if not(self.scene_object is None) and not(self.user_input_object is None): 
-            from gui import Gui
-            interface_object = Gui()
-            interface_object.assign_style_object(self.style_object) 
-            interface_object.assign_config_input_object(self.config_input_object)
-            interface_object.assign_user_input_object(self.user_input_object,self)
-            interface_object.run_and_get_inputs()# user_input_object instantiated inside
-        else:
-            print("Scene and User Input objets do not exist yet.\nHint: 1, 2")
-    def do_guics(self,line):
-        "Wokin progress. Run classic simple mode FreeSimpleGUI."
-        if not(self.scene_object is None) and not(self.user_input_object is None): 
-            from gui_simple import Gui
-            interface_object = Gui()
-            interface_object.assign_style_object(self.style_object) 
-            interface_object.assign_config_input_object(self.config_input_object)
-            interface_object.assign_user_input_object(self.user_input_object,self)
-            interface_object.run_and_get_inputs()# user_input_object instantiated inside
-        else:
-            print("Scene and User Input objets do not exist yet.\nHint: 1, 2")
-
-    def do_geometry(self,line):
-        "Show a sample of 1 bar, or a few, with current export plugin"
-        print("futurework")
-
     edit_parser = cmd2.Cmd2ArgumentParser()
     edit_parser.add_argument("-c","--config",help ="")
     @cmd2.with_argparser(edit_parser)
@@ -1081,19 +655,6 @@ class PavlovCLI(cmd2.Cmd):
             if key in list(self.user_input_object.__dict__.keys()):
                 self.user_input_object.__dict__[key] =  new_value
 
-
-    '''    
-    def do_select_gui_mode(self,line):
-        "choose gui in simple mode, developer mode, or none"
-        gui_mode = str(input("Developer mode (D) or Lite Mode (L)? "))
-        if gui_mode.lower() == 'd':
-            do_gui_developer_mode = True 
-            do_gui_lite_mode = False
-        elif gui_mode.lower() == 'l':
-            do_gui_developer_mode = False
-            do_gui_lite_mode = True
-        #return True
-    '''
     def do_o(self,line):
         "open, abbreviated"
         self.do_open(line)
@@ -1169,28 +730,9 @@ class PavlovCLI(cmd2.Cmd):
         else:
             self.do_help("open")
 
-            
-         
-            
-
-    #open_parser = cmd2.Cmd2ArgumentParser()
-    #open_parser.add_argument('-f','--file',help='open file')
-    #@cmd2.with_argparser(open_parser)
 
     def pretty_title(self,line):
-        """
-        try:
-            string = "Pavlov3D"
-            prettystring = pyfiglet.figlet_format(string)
-            print(prettystring)
-            
-        except:
-            #pass
-            prettystring = ""
-        """
-        print(self.pavlov3d_prettyprint)
-        
-        #return prettystring
+        print(self.pyfiglet_title)
         
     def do_unix2time(self,line):
         """
@@ -1201,70 +743,13 @@ class PavlovCLI(cmd2.Cmd):
         Examples:
             unix2time 1734202184.912056
             unix2time 1734202184
-        """
-        
+        """        
         try:
             datetime_object = datetime.fromtimestamp(float(line))
             print(datetime_object)
         except Exception as e:
             self.do_help("unix2time")
 
-    def do_webapp(self,line):
-        """
-        Show URL for Pavlov 3D web app.
-        """
-        print("https://pavlov3d.world")
-
-    def do_video(self,line):
-        """
-        Show URL for Pavlov 3D tutorial video.
-        """
-        url = "https://youtu.be/ttBwGudNsxk"
-        print(f"{url}")   
-
-    def do_p(self,line):
-        self.do_preview("scene")
-
-    preview_parser = cmd2.Cmd2ArgumentParser()
-    preview_parser.add_argument('-s','--scene',nargs = "?", default=False, const=True, help='Preview the scene.')
-    preview_parser.add_argument('-c','--curve',nargs = "?", default=False, const=True, help='Preview a certain curve. ')
-    preview_parser.add_argument('-g','--group', nargs = "?",default=False,help='Preview a certain group.')
-    preview_parser.add_argument('-sub','--subgroup', nargs = "?", default=False, const=True,help='Preview a certain subgroup.')
-    @cmd2.with_argparser(preview_parser)
-    def do_preview(self,args):
-        "Preview"
-        """
-        Preview the model, once the pointcloud is built. 
-        Importing matplotlib takes the cli.exe from 21 mb to 34 mb.
-        Options:
-            Preview just one curve in 3D, to demonstrate export geometry.
-            Preview one or more curves in 2D, , with basic plotting.
-            Preview all curves in 2D, with basic plotting.
-            Preview all curves in 3D, with basic plotting.
-
-        Examples:
-            preview scene
-            preview scene -2D -xy
-            preview scene -2D -xz
-            preview scene -2D -yz
-            preview scene -3D
-            preview curve -2D -i 0
-            preview curve -2D -i 2:8
-        """
-        
-        if self.pointcloud_bool==True:
-            #try:
-            if args.scene is True:
-                main.preview_scene3D(self.scene_object)
-            elif args.curve is not None:
-                i=args.curve
-                main.preview_curve3D(self.scene_object,i)
-            else:
-                self.do_help("preview")
-            #except:
-            #    print("preview does not function in this version of the Pavlov 3D CLI.")
-        else:
-            print("The pointcloud is not prepared. Hint: i")
     
     project_parser = cmd2.Cmd2ArgumentParser()
     project_parser.add_argument('-l','--list',nargs = "?", default=False, const=True, help='See all project directories that are in the Pavlov program location. This will not include project diretories saved elsewhere, until some future date when a registration file will track those recent locations.')
@@ -1548,10 +1033,9 @@ class PavlovCLI(cmd2.Cmd):
             print(f"os.path.abspath(__file__) = {os.path.abspath(__file__)}")
             fm.tree(os.path.dirname(os.path.abspath(__file__)))
 
-
     def do_clear(self,line):
         
-        if environmental.windows():
+        if src.environment.windows():
             os.system('cls')
         else:
             os.system('clear')
@@ -1612,19 +1096,6 @@ class PavlovCLI(cmd2.Cmd):
         for key, value in self.vars.items():
             self.poutput(f"{key} = {value}")
 
-    #def do_import(self, args):
-    #    """Import a library dynamically."""
-    #    module_name = args.strip()
-    #    if module_name:
-    #        try:
-    #            module = importlib.import_module(module_name)
-    #            self.modules[module_name] = module
-    #            self.context[module_name] = module
-    #            self.poutput(f"Module '{module_name}' imported successfully")
-    #        except ImportError:
-    #            self.poutput(f"Failed to import module '{module_name}'")
-    #    else:
-    #        self.poutput("Usage: import <module_name>")
 
     def do_functions(self, args):
         """List all functions and methods of an imported module."""
@@ -1764,11 +1235,56 @@ class PavlovCLI(cmd2.Cmd):
             except Exception as e:
                 self.perror(f"Error: {e}")
 
+    def do_1(self,line):
+        "make scene"
+        self.make_scene(None)
+    def do_2(self,line):
+        "make config"
+        self.makeconfig(None)
+    def do_3(self,line):
+        "skipinterface"
+        self.do_skipinterface(None)
+    def do_4(self,line):
+        "import data, or, make data"
+        self.import_data(None)
+    def do_5(self,line):
+        "make pointcloud, or, build_pointcoud"
+        self.build_pointcloud(None)
+    def do_6(self,line):
+        "export or make export"
+        self.do_export("fbx")
 
-if __name__=='__main__':
-    app = PavlovCLI()
+
+class DissertationCLI(PalovianCLI):
+    pyfiglet_title =  """
+     ____  _                   _        _   _             ____  ____
+    |  _ \(_)___ ___  ___ _ __| |_ __ _| |_(_) ___  _ __ |___ \| ___|
+    | | | | / __/ __|/ _ \ '__| __/ _` | __| |/ _ \| '_ \  __) |___ \\
+    | |_| | \__ \__ \  __/ |  | || (_| | |_| | (_) | | | |/ __/ ___) |
+    |____/|_|___/___/\___|_|   \__\__,_|\__|_|\___/|_| |_|_____|____/
+
+    """
+    prompt = '>> '
+    intro = pyfiglet_title + \
+    '''
+    Welcome to the Dissertation25 Shell! 
+    Type "help" or "h" to see available commands. 
+    Type "instructions" or "i" to see a description of workflow.
+    Type "gui" or "g" to launch the Graphical User Interface.
+    '''
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    def do_zzz(self,line=None):
+        print("xxx shall rise.")
+
+def start_shell():
+    app = DissertationCLI()
     app.onecmd_plus_hooks("test")
-    Directories.initilize_program_dir()
+    #Directories.initilize_program_dir()
     app.initialize_scene_object()
     Directories.initialize_startup_project()
     app.cmdloop()
+
+if __name__=='__main__':
+    start_shell()

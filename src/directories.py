@@ -5,7 +5,7 @@ Created: 29 January 2025
 
 Purpose: 
 Keep directory assignment organized, particularly for using project folders.
-Migrate away from directory amangement in environmental.py
+Migrate away from directory amangement in environment.py
 
 Example:
 from src.directories import Directories
@@ -18,7 +18,7 @@ import src.environment
 
 class Directories:
     "from directories import Directories"
-    core = None
+    src = None
     project = None
     configs = None
     exports = None
@@ -27,27 +27,34 @@ class Directories:
 
     """ setters """
     @classmethod
-    def set_core_dir(cls,path):
-        cls.core = path
+    def set_src_dir(cls,path=None):
+        if path is None:
+            cls.src = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        else:
+            cls.src = path
     @classmethod
     def set_project_dir(cls,path):
         # if a legitimate full path is not provided, assume that the project directory is within the core\projects\ directory
         if os.path.isdir(path):
             cls.project = path
         else:
-            relative_path =  cls.get_core_dir()+"\\projects\\"+path
+            relative_path =  cls.get_program_dir()+"\\projects\\"+path
             if os.path.isdir(relative_path):
                 cls.project = relative_path
         print(f"Project directory set: {cls.project}")
 
     """ getters """
     @classmethod
-    def get_core_dir(cls):
-        #return cls.core
-        return cls.core
+    def get_src_dir(cls):
+        #return cls.src
+        if cls.src is None:
+            cls.set_src_dir(None)
+        return cls.src
     @classmethod
     def get_program_dir(cls):
-        return cls.get_core_dir()
+        "Assume that the src directory is in the program directory."
+        print(f"os.path.dirname(cls.get_src_dir()) = {os.path.dirname(cls.get_src_dir())}")
+        return os.path.dirname(cls.get_src_dir())
     @classmethod
     def get_project_dir(cls):
         return cls.project
@@ -59,10 +66,10 @@ class Directories:
         return cls.get_project_dir()+"\\exports\\"
     @classmethod
     def get_import_dir(cls):
-        if environmental.vercel==False:
+        if src.environment.vercel==False:
             return cls.get_project_dir()+"\\imports\\"
-        elif environmental.vercel==True: # web app, blob
-            print("\nYou have not yet built a web app, last I checked.\nAnd yet, environmental.vercel==True")
+        elif src.environment.vercel==True: # web app, blob
+            print("\nYou have not yet built a web app, last I checked.\nAnd yet, environment.vercel==True")
             pass
         return cls.get_project_dir()+"\\imports\\"
     @classmethod
@@ -84,14 +91,13 @@ class Directories:
     # migrated
     @classmethod
     def initilize_program_dir(cls): # called in CLI. Should also be called at other entry points.
-        cls.set_core_dir(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
-        print(f"cls.get_core_dir() = {cls.get_core_dir()}")
-        #cls.initialize_startup_project()
+        cls.set_src_dir(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
+        print(f"cls.get_src_dir() = {cls.get_src_dir()}")
     @classmethod
     def initialize_startup_project(cls):
-        filename_default_project_entry = "./src/projects/default-project.toml"
+        filename_default_project_entry = "./projects/default-project.toml"
         loaded_entry = toml_utils.load_toml(filename_default_project_entry)
-        cls.set_project_dir(cls.get_core_dir()+"\\projects\\"+loaded_entry["project_directory"])
+        cls.set_project_dir(cls.get_program_dir()+"\\projects\\"+loaded_entry["project_directory"])
 
     """get filepaths"""
     @classmethod

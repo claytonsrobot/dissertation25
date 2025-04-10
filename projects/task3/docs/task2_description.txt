@@ -1,0 +1,15 @@
+Task 1:
+Please see attached template (Sheet1 of ch2tableTemplates.xlsx), attached input files (mads4resstats.csv, mad4ptstats.csv, and mad4lpmstats.csv), and attached script (correctch2tables_figs_Cv_pguLtY3235.py). We need to complete the tables shown in Sheet1 of ch2tableTemplates.xlsx with data from the attached input files. Here’s the cross-walk between the columns in the template and the columns in the csvs:
+“tracer-based age coefficient of variation” from “cvlpmad” column of mad4lpmstats.csv
+“particle tracking-based age coefficient of variation” from “cvptad” column of mad4lpmstats.csv
+“average coefficient of variation of resistivity” from “acvr” column of mad4lpmstats.csv
+“coefficient of variation of coefficient of variation of resistivity” from “cvcvr” column of mad4lpmstats.csv
+“coefficient of variation of effective resistivity” from “cver” column of mad4lpmstats.csv
+“mean effective resistivity” from “MER” column of mad4resstats.csv
+
+Task 2:
+We need to make a table of summary stats of effective resistivities of all samples. Effective resistivities are referred to as “RESeff” in the associated jupyter-notebook. Each sample will have at least 100 effective resistivities but can have many more. They should all be multiples of 100 or very close to that. The number of effective resistivities associated with a given sample should be referred to as “numparts” in the attached jupyter-notebook. Please see attached template (Sheet2 of ch2tableTemplates.xlsx), jupyter-notebook (NEWSCRIPT3cV_3951454pguL953.ipynb). Please use input files shared previously and revise jupyter-notebook so that it will calculate these stats for all samples. The input file (.mppth) shared previously is just for one. Please let me know if you have any questions.
+
+Task 3:
+We need to make a table of summary stats of particle track lengths of all samples. Please see attached template (Sheet3 of ch2tableTemplates.xlsx), jupyter-notebook (NEWSCRIPT3cV_3951454pguL953.ipynb). Particle track lengths are referred to as “RESeffnumerator” in the jupyter-notebook. Each sample will have at least 100 effective resistivities but can have many more. They should all be multiples of 100 or very close to that. Please use input files shared previously and revise jupyter-notebook so that it will calculate these stats for all samples. The input file (.mppth) shared previously is just for one. Please let me know if you have any questions.
+
