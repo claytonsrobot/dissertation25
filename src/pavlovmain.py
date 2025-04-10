@@ -1,507 +1,332 @@
-#! python3
+#!/usr/bin/python3
+#do not erase (needed to be executable for autostart)
+
 '''
-Title: main.py
-Author: Clayton Bennett
-Date Created: 22 February 2023
-Date of servicable version: 12 June 2024
-Date of notable version: 05 February 2025
+StemBerry V.105
+Last updated: 10/16/2022
+Dev: Clayton Bennett
+OG dev: Austin Bebee
+Description: SOCEM GUI. Connect RPi to Arduino, collect raw data. Save text inputs.
 
-Instructions:
-Call and run Pavlov (FBX SDK version) to generate FBX files.
-Open the exported FBX/GLB file in the CAD Assistant desktop program, from Open Cascase :)
+Contents (in order):s
+- Library imports
+- Global Variables
+- Global Functions
+- GUI Class
+    - Home / Initial input screen
+    - Data collection (Record Force) screen
+        - Runs data collection function
+        - Stores data & saves data
+        - Plots F v D graph
+    - Load cell calibration screen
+    - Error report screen
+- Excute GUI command
 
-Important knowledge:
-BIN encoding allows conversion to .glb files, while ASCII encoding is user-readable.
-An FBX file exported to BIN is ~30% larger than an ASCII,
-but this doesn't matter once converted to GLB, those are the same size, about half of the FBX ASCII original.
-Compressing FBX and GLB files reduces size to something like 15%, which is fantastic for email.
-Blender import of published file takes a long time, how disappointing.
+V15
+    - Change to 9 cell and 3 range count inputs
+V19
+    - Rip out defunct calculations
+    - Clean up code, specifically by organizing statements of place for tkinter items
+V37
+    - Dial in functionality with pretty new GUI.
+    - barbottom (not barmiddle) set to 70%-90% of stem height
+V42
+    - Develop top level methods
+V50
+    - Functional save state, save files, naming convention edge cases, and crisp appearance
 
-Futurework for this fork (FBX SDK) of Pavlov:
-Add 3D pyplot preview.
-Embed images ("videoclip textures" according to the Autodesk FBX SDK)
-Run C++ FBX code.
-Publish directly to GLB, possibly using Khronos or Microsoft tools.
-Check out the Fabcebook FBX2GLB github page - it may be better than the Khronos/Blender file converter used here.
-Look into assimp tools.
-Animation - not supported by CAD Assistant unfortunately. So, if there was animation, how would we view it?
+V54
+    - Generate CSV's, suppress XLSX's
+V56
+    - Retain 9-cell variables, for EI assessment upon saving counts, without reopening CSV files
+V67
+    - So many things.
+v77
+    - Serial collection functial, drinking from a waterhose, high hz
+    - Tare button message.
+    - PeakClick popup window.
 
-Future plans for Pavlov on the whole:
-Then, full migration to three.js for .glb file generation in web.
-I have not involved interpolation or any data compression, because it is not in keeping with the goal "preceding analysis visualization".
-However, a specialized viewer/editor program in the future may be capable of hosting analysis functionality catered to certrain subject matters.
+V84
+    - The way peak clicks are handled and saved was moved to the inside of the choose peaks code, becuase plt.show() won't give up.
+    - Shut down plt.show after CSV file is saved.
+V88
+    - GUI.filename_force updated on page change to either record force frame or final inputs page
+    - nameBlackBox updated to remove excess hyphen when direction ==''
+    - XLSX compilation file functional, currently set to seek force and EI files
+    - EI calcualtion works - only needs 1 file for all four nine-cell-scheme tests. 
+    - This thing is getting heavy, 2844 lines.
+V90
+    - Identify OS and choose filepath accordingly.
 
-Framed comments:
-15 October 2023: Recent success in establishing axes and ticks. The tick and axes line algorithm represents the groundwork for text annotation.
-24 November 2023: Calculate curve_object_diameter after each relevant feature addition, outward growth.
-
-Next:
-Include label within radius - center on side. Same goes for any embedded jpg/png images.
-Animation should be able to export. Passable to FBX, to Blender, to GLB.
-Possibly organize models into a ring or ellipse, and have them each rotate while they also revolve.
-Save these (ring vs diagonal) as different poses, somehow. Poses include alignment, like diagoal vs all in a row. Feasible?
-In pygame preview, allow users to create additonal poses by dragging/moving each object.
-Use metadata feature in OpenCascade CADAssistant.
-Animation to call individual objects into tight collection vs dispersed/exploded view.
-Animation to go to one of 3 bins.
-Swap bottom view to top view. Change fence side and direction facing of labels. Change plotting orientation? ugh, my heart.
-In JSON config file, allow for: "column_height":"1:5","column_depth":"6:10",
-
-Assumptions:
-Data orgin of a group is coincident with the data origin of its first child.
+V92
+    - Trigger peak selection for all tests, with the assessAllTests boolean.
+    - Noticed that encoderWorked_override is poorly implemented. No reason to fix now, but, should be alterable as opposed to needing manual suppression through commenting
+    - GUI.currentdirection.get() set to "" on_frame_show RecordForce.
+V94
+    - Changed mass measurement from kg to gramsa
+    - Fixed all time units to be (sec), not (s) or (seconds), and certainly not (ms)
+V96
+    - EI is now calculated in lbs*in^2, then converted to metric N*cm^2. Input is metric, conversion happens inside, processing is SAE, then conversion to metric before output to metric.
+V97
+    - EI calculation betaV edge cases dealt with: if nan, set betaV to 0.
+v99
+    - Change if statement in serConnect to retain dev_manual
+Fix:
+- Change compilation to access CVSV data rather than state data. This is to protect against data loss if the computer dies.
+- Or, load state. Load state would be sick.
+- Add more variables to state save backup text file.
+- Remove auto graph button, or at least uncheck it: use it to refer to auto clicker
+- Finish autoclicker by setting plt.show() into an inset tkinter gui popup, and then mainoop.
+     Use: FigureCanvasTkAgg,NavigationToolbar2Tk,plt,Cursor.
+- dev port is currently defined manually, given dev_manualOverride
+- move header variable inputs
+- make directory inputtable using dropdown menu item and textbox
+- upgrade tkinter items to CustomTkinter
+- PRIORITY: CREATE BASE NAME FROM VARIABLE AND PLOT: GUI.filename_force.get() is getting dangerous.
+     
+Notes:
+- exec() is your friend. Use is to run multiple lines of code which you can copy and paste into a shell, using triple '  commenting
+- save as separate CSV files, then as one combined XLSX file with multiple pages
 '''
 
-#import numpy as np
-import os
-import time
-import copy
-#import uniqueUnixFilename
-
-from src.scene import Scene
-from src.style import Style
-from src.import_lib import ImportLib
-from src.scale import Scale, MultipleAxesScalingAlgorithm #
-#MultipleAxesScalingAlgorithm.assign_hierarchy_object(hierarchy_object)
-#MultipleAxesScalingAlgorithm.normalize_all_curve_objects()
-#from converter import converter as Convert
-#from src.preview import Preview as Preview
-
-from src import pngMaker
-from src import messaging
-from src.config_input import ConfigInput
-from src.user_input import UserInput
-from src.datapoint import DataPoint
-from src.curve import Curve
-
-#from src.ticks import Ticks
-#from src.fences import Fences 
-from src.hierarchy import Hierarchy
-#from src.text_translation import TextTranslationIntermediate
-
-from src import translation
-from src import environmental
+'''Local libraries'''
+#import src.serial
+from gui.gui_main import GUI
 from src.directories import Directories
-if environmental.vercel():
-    from src import vercel_blob
 
-def main():
-    request = None  # django artifact
-    print('Running main .....')
-    global scene_object
-    scene_object, style_object, hierarchy_object = set_up(request)
-    
-    config_input_object,user_input_object = \
-        get_configuration(scene_object, style_object)
+''' Libraries '''
+import tkinter as tk
+#from multiprocessing import Process
 
-    interface_object = determine_interface(style_object,config_input_object,user_input_object)
+import matplotlib
+from matplotlib import style
+matplotlib.use("TkAgg")
+#from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+#from matplotlib.figure import Figure
+#import matplotlib.pyplot as plt
 
-    run_interface(style_object,interface_object,user_input_object,config_input_object)
+import os
+import platform
 
-    if config_input_object.grouping_algorithm == "group-by-text":
-        build_grouping(hierarchy_object,user_input_object,loaded_grouping = config_input_object.loaded_grouping)
-    
-    export_control_object = import_data(scene_object,style_object,user_input_object,hierarchy_object)
-                                        
-    png_preview(scene_object,user_input_object,export_control_object)
-                  
-    build_point_cloud(scene_object,style_object,user_input_object,hierarchy_object)
-    if False: 
-        preview_scene(scene_object)
+#import peakutils
+#from PeakUtils.Plot import plot as pplot
+import math
+#import struct # what is this?
+#import datetime
+from datetime import date
+import time
+# import xlsxwriter # csv now, xlsxwriter not used
 
-    createFBX_object = generate_export(scene_object,style_object,export_control_object)
+''' Global Variables --> Config'''
 
-    return scene_object, hierarchy_object, createFBX_object
+operator = 'Clayton Bennett'
+location = 'EP425' # 'Kambitsch Farm'
+coordinates = '46.592516,-116.946268'
+script = os.path.basename(__file__)
+directory = os.path.dirname(__file__)
 
-def set_up(request):
-    '''0) Set up program'''
-    # what is request? It is part of the django implementation, in the views.py file
-    # filepath = request.session["current_fbx_export"] ; this is expected in prepare export director, using session variable
-    # Change this to a commonly used run time counter. Do not use time.time
+today = date.today()
+datestring = today.strftime("%b-%d-%Y")
+ignoreserial = False # True 
+#ignoreserial = True # delete this # if RecordForce.ser.isOpen() == False:
+barlength = 76 # cm. this shouldn't ever change, unless the bar is replaced. i.e. the width of a side hit cell.
+#dev_manual = 'COM7' # manual override
+dev_manual = '/dev/ttyACM0' # manual override
+#dev_manual = 'COM7' # manual override
+dev_manualOverride = True
+useInitialPlot_PeackClick = False
+distance_referenced_PeakClick = False
+barradius = .8 # 1 cm = 0.32 inches
+#barradius = 1 # 1 cm = 0.32 inches
+default_stemheight = 10.0 # cm
+initial_barbottomOverStemheight_coeff = 0.8
+convert_KgToLbs = 2.20462262 #kg to lbs
+convert_KgToN = 1/9.81 #kg to N # CHECK FOR ACCURACY CB 8/9/2022
+convert_NToLbs = 4.44822
+#calibrationFactor = 199750 # 23.4 N > 5 lbs; 5 lbs = 22.2411
+calibrationFactor = 204200 # 22.24 N = 5 lbs
 
-    scene_object = Scene()
-    style_object = Style()
-    scene_object.assign_style_object(style_object) # cls
-    style_object.assign_scene_object(scene_object) # cls 
-    scene_object.assign_program_start_timestamp(time.time())
-    scene_object.assign_request(request) # cls
+inchonvert = (((math.pi*(0.764))*31.4136)/359) # converts displacement to inches, wheel diameter = 31.4136
+visualizeDatastream = False #True #set to live graph for data display
+sleepSend = 0.5
+encoderWorked_override = False # False means encoder will be trated as not working. this is poor code and should be improved.
+assessAllTests = True
+refreshAllAuto = False
+autopopulatestemcount = True
+defaultstemcount = 33
+importFileDataTF = True
+#visualizeDatastream = True
+# visualizeDatastream ( search: "def datafeed(" ) is broken right now. Refer to earlier versions (pre v65)for reference of how Bebee left it.
+vis = 's' # legacy
+vis = 'nope' # 
 
-    Hierarchy.assign_scene_object(scene_object)
-    hierarchy_object = Hierarchy() # instance
-    scene_object.assign_hierarchy_object(hierarchy_object)
-    style_object.assign_hierarchy_object(hierarchy_object)
-    DataPoint.assign_style_object(style_object)
-    DataPoint.assign_text_string("this is the same DataPoint class")
-    prepare_export_filepath(scene_object,request)
-
-    return scene_object, style_object, hierarchy_object
-
-def get_configuration(scene_object, style_object):
-    '''1) Run GUI, select data'''
-
-    # check if do not have pysimplegui, take default inputs (from config or from gui default) and skip GUI 
-    config_input_object = ConfigInput()
-    config_input_object.assign_scene_object(scene_object) # cls
-    scene_object.assign_config_input_object(config_input_object) # cls
-    loaded_config, loaded_grouping = config_input_object.define_and_load_default_config_input()
-
-    
-    #user_input_object = user_input_class()
-    user_input_object = UserInput()
-    user_input_object.assign_style_object(style_object) # cls
-    user_input_object.set_default_text_style() # Get rid of this, set in gui or in export plugin
-
-    scene_object.assign_user_input_object(user_input_object) # cls
-    style_object.assign_user_input_object(user_input_object) # cls
-    scene_object.hierarchy_object.assign_user_input_object(user_input_object)
-    
-    return config_input_object,user_input_object
-
-def determine_interface(style_object,config_input_object,user_input_object):
-    #interface_list = ['json','gui_simple','gui_developer','control_cli']
-
-    if style_object.interface_choice == 'gui_simple' or style_object.interface_choice == 'gui_developer':
-    #if style_object.use_GUI is True:
-        #if style_object.developer_mode_gui is True:
-        if style_object.interface_choice == 'gui_developer':
-            from gui import Gui
-        #else:
-        elif style_object.interface_choice == 'gui_simple':
-            from gui_simple import Gui
-        print('gui_object load\n')
-        gui_object = Gui()        
-        control_cli_object = None
-        interface_object = copy.copy(gui_object)
         
-    elif style_object.interface_choice == 'control_cli':
-        from control_cli import ControlCLI
-        control_cli_object = ControlCLI()
-        gui_object = None
-        interface_object = copy.copy(control_cli_object)
+''' matplotlib Graph Settings '''
+'''
+style.use("ggplot")
+f = Figure(figsize=(4.85,3.9), dpi=75)
+a = f.add_subplot(111)
+a.set_ylim(0, 25)
+'''
+
+
+
+#Bebee legacy
+# * # DATA COLLECTION FUNCTION - Acquires live data from Arduino # * #
+def run(self, ser):
+    try:        
+        started = 's'
+        ser.write(started.encode()) #sends 's' to arduino, telling it to start
+        print('send s to arduino, legacy')
+    except:
+        errors.append('serial com. (start data)') # label 
+        eCode = 'e2'
+        errorCodes.append(eCode)
+        popup('start data collect')
         
-    elif style_object.interface_choice == 'json':
-        control_cli_object = None
-        gui_object = None
-        interface_object = None
-        
-    else:
-        control_cli_object = None
-        gui_object = None
-        interface_object = None
+    ser.flush()
+    time.sleep(.1)
+    #Don't need this:
+    #try:
+    #ser_bytes = ser.readline()
+    #decoded_bytes.insert(0,(ser_bytes[0:len(ser_bytes)-2].decode("utf-8")))#translates bytes to string, inserts incoming data in decoded_bytes list
+    #except:
+     #  popup("communication")
 
-    return interface_object #gui_object, control_cli_object
+    #DATA COLLECTION CODE
 
-def run_interface(style_object,interface_object,user_input_object,config_input_object):
-    # i nede the top CLI to call a different CLI,
-    # which can also be called here, without routing to the top cli with a circular reference
-        
-    #user_input_object = gui_object.run_and_get_inputs()# user_input_object instantiated inside
-    if not(interface_object is None):
-        interface_object.assign_style_object(style_object) 
-        interface_object.assign_config_input_object(config_input_object)
-        interface_object.assign_user_input_object(user_input_object)
-        user_input_object.assign_interface_object(interface_object) # revers this: user input comes first
-        interface_object.run_and_get_inputs()# user_input_object instantiated inside
-    else:
-        user_input_object.pull_config_input_object(config_input_object) # direct pull, no interface
+    if vis == 's':# data displayed in scrollbars (default)
+        # Displays incoming data 
+        scroll = tk.Scrollbar(self)
 
-def build_grouping(hierarchy_object,user_input_object,loaded_grouping):
+        RecordForce.timeLabel = tk.Label(self, text = "s",font = ("arial", 14, "bold"), fg = "dodgerblue2", bg = "ghost white")
+        RecordForce.timeLabel.place(x = 274, y = 70)
+        RecordForce.Timelist = tk.Listbox(self, yscrollcommand = scroll.set, bg = "ghost white",highlightbackground = "gray2", width = 7, height = 1, font = ("arial", 14, "bold"), fg = "dodgerblue2")
+        RecordForce.Timelist.place(x = 240, y = 100)
 
-    hierarchy_object.cycle_through_filenames_intialize_curves()
-    hierarchy_object.build_tiers_and_groups_objects(user_input_object,loaded_grouping)
+        RecordForce.disLabel = tk.Label(self, text = "in.",font = ("arial", 14, "bold"), fg = "dodgerblue2", bg = "ghost white")
+        RecordForce.disLabel.place(x = 357, y = 70)
+        RecordForce.Dislist = tk.Listbox(self, yscrollcommand = scroll.set, bg = "ghost white",highlightbackground = "gray2", width = 7, height = 1, font = ("arial", 14, "bold"), fg = "dodgerblue2")
+        RecordForce.Dislist.place(x = 330, y = 100)
 
-def import_data(scene_object,style_object,user_input_object,hierarchy_object):
-    if False:
-        style_object.override_style_with_cij()
-    user_input_object.determine_which_plugins_to_use_gui() # toggle
+        RecordForce.forceLabel = tk.Label(self, text = "lbs.",font = ("arial", 14, "bold"), fg = "dodgerblue2", bg = "ghost white")
+        RecordForce.forceLabel.place(x = 444, y = 70)
+        RecordForce.Forcelist = tk.Listbox(self, yscrollcommand = scroll.set, bg = "ghost white",highlightbackground = "gray2", width = 7, height = 11, font = ("arial", 14, "bold"), fg = "dodgerblue2")
+        RecordForce.Forcelist.place(x = 420, y = 100)
 
-    '''1b) Import data'''
-    import_function_object = load_import_plugin_object(scene_object,style_object,user_input_object)
-    
-    #import_function_object.assign_scale_object(scale_object)
-    print("Begin import...")
-    import_function_object.run_import()
-    print(f"Import complete.")
-    # curve_objects and data_point_objects are created at birth, in import plugin
-        
-    scale_object = Scale()        
-    scale_object.assign_scene_object_etc(scene_object)
-    scale_is_ready=True
-    if scale_is_ready is True:
-        pass
-        #scale_object.scale_datapoints() # garbage function, poorly writte. go look and see why.
-
-    MultipleAxesScalingAlgorithm.normalize_all_curve_objects(set(hierarchy_object.dict_curve_objects_all.values()))
-    style_object.calculate_halfwidths_and_directions()
-
-    # yes scale should be after import and before passing values to scene_object 
-    # no, boooo, do it before assignment to curve objects and datapoints
-    # well, should the datapoints know their unscaled values? i suppose they would have to for proper labeling.....hmmmm.
-    # he was right the first time. After.
-
-    scene_object.populate_basic_data(\
-            import_function_object.names,
-            import_function_object.vectorArray_time,
-            import_function_object.vectorArray_height,
-            import_function_object.vectorArray_depth,
-            import_function_object.headers_time,
-            import_function_object.headers_height,
-            import_function_object.headers_depth)    
-    """
-    scene_object.populate_halfwidth_data(\
-            import_function_object.vectorArray_halfwidth_time,
-            import_function_object.vectorArray_halfwidth_height,
-            import_function_object.vectorArray_halfwidth_depth,
-            import_function_object.average_halfwidth_time,
-            import_function_object.average_halfwidth_height,
-            import_function_object.average_halfwidth_depth)
-    
-    scene_object.populate_direction_data(\
-            import_function_object.vectorArray_direction)
-    """
-    messaging.print_data_range(scene_object)
-    # sort out parlance between "function" and "plugin"
-    export_plugin_list = style_object.prepare_export_modules()
-    export_control_object = export_plugin_list[0] # for text angling only 
-    user_input_object.pull_values_from_export_control_object(export_control_object) # for text angling only
-    #style_object.prepare_text(user_input_object) # ultimately shut this down, migrated to text_translation.py
-    TextTranslationIntermediate.assign_style_object(style_object)
-    TextTranslationIntermediate.prepare_text() # ultimately shut this down, migrated to text_translation.py
-    export_control_object.export_name = scene_object.filename_FBX
-    return export_control_object
-
-def load_import_plugin_object(scene_object,style_object,user_input_object):
-    print("main.load_import_plugin_object()")
-    import_lib_object = ImportLib()
-    import_function_object = style_object.prepare_import_module() # set user_input_object.import_style
-    import_function_object.assign_scene_object_etc(scene_object)
-    import_function_object.assign_user_input_object(user_input_object)
-    import_function_object.assign_import_lib_object(import_lib_object)
-    import_function_object.assign_config_input_object(scene_object.config_input_object)
-
-    import_function_object.pass_in_DataPoint_class(DataPoint)
-    Curve.pass_in_scene_object(scene_object)
-    import_function_object.pass_in_Curve_class(Curve)
-    return import_function_object
-
-def prepare_export_filepath(scene_object,request):
-    '''
-    1c) Prepare temp directory and export filename
-    '''
-    #print(f"\nDirectories.get_program_dir() ={Directories.get_program_dir()}")
-    if request != None:
-        #filepath = request.session["current_fbx_export"] # the filename wil be chopped off - this is just to get the 
-        export_dir = os.path.dirname(request.session["current_fbx_export"]) # the filename wil be chopped off - this is just to get the 
-        
-    else: # for running cli.py locally
-        #print(f'Working directory: {os.getcwd()}')
-        # head,tail = os.path.split(os.getcwd()) # assumes the export dir will be within the code directory, which is good for installaton, but not for document control. Find a typical existing way. 
-        # you should call "python3 core\cli.py" while in the project directory, instead of "python3 cli.py" while in \core\ 
-        #filepath = head+"\\"+tail+"\\exports\\filler_chopped_off" # 
-        #export_dir = os.getcwd()+"\\exports\\"
-        #export_dir = Directories.get_program_dir()+"\\exports\\"
-        export_dir = Directories.get_project_dir()+"\\exports\\"
-
-    scene_object.exportdir = export_dir
-    scene_object.filename_FBX = 'pavlov_'+str(int(scene_object.unix_start)) +'.fbx'
-    scene_object.filepath = scene_object.exportdir + scene_object.filename_FBX
-    return None
-
-def png_preview(scene_object,user_input_object,export_control_object):
-
-    '''
-    3) Plot preview
-    '''
-    if user_input_object.pngShow or user_input_object.pngExport:
-        pngMaker.preview(scene_object,
-                         user_input_object.pngShow,
-                         user_input_object.pngExport,
-                         scene_object.export_name)
-
-def build_point_cloud(scene_object,style_object,user_input_object,hierarchy_object):
-
-    construct_heirarchy(scene_object,style_object,user_input_object,hierarchy_object)
-    #print("SUCCESS A:construct_heirarchy")
-    build_ticks(scene_object,style_object)
-    #print("SUCCESS B:build_ticks")
-    build_texts(scene_object,style_object)
-    #print("SUCCESS C:build_texts")
-    layout_spatial(scene_object,style_object,hierarchy_object)
-    #print("SUCCESS D:layout_spatial")
-    build_fences(scene_object)
-    #print("SUCCESS E:build_fences")
-
-    return True
-def construct_heirarchy(scene_object,style_object,user_input_object,hierarchy_object):
-    
-    # hierarchy_object.build_tiers_and_groups_objects(user_input_object) # i moved this higher becuase group membership is needed for something in the axes_labels_machine or the title_machine
-    # Group hierarchy and membership is established, based on gui values for groups and subgroups        
-    
-    # 30 January 2025, something is happening out of order here
-    
-    hierarchy_object.apply_curve_object_spans()
-    hierarchy_object.apply_group_object_spans() # failuremode: group_object.span_relative_to_self_data_origin, the tier 2 group "December" has this attribue, while the tier 1 attribute "Maxson" does not
-    hierarchy_object.group_padding_assignment()
-    hierarchy_object.step_through_hierarchy_bottom_up(hierarchy_object.determine_characteristic_length_for_group) # is this working?
-
-    style_object.prepare_curve_and_group_elements_from_export_style(user_input_object.export_function) # needs characteristic length
-    ######
-    return True
-    
-def build_ticks(scene_object,style_object):
-    '''
-    5) Create axes_arrays
-    '''
-    ticks_object = Ticks()
-    ticks_object.assign_scene_object(scene_object)
-    if style_object.consistent_tick_size is True:
-        tick_size = ticks_object.determine_consistent_tick_size()
-        style_object.tick_size = tick_size
-        ticks_object.generate_consistent_ticks(tick_size)
-        style_object.use_consistent_tick_size_as_consistent_padding(2*tick_size)
-    else:
-        ticks_object.generate_ticks() # totally chuck this? not now, don't over optimize quite yet. But yes, excess code is a problem. We probably don't need this. cull later.
-
-    return True
-    '''
-    () texts_arrays
-    Done after object translation / origin assignment
-    Group and subgroup labels (and fencelines) will not fit into the len(vectorArray_time) paradigm
-    '''
-
-
-def build_texts(scene_object, style_object):
-    # group_label_machine was shoved into translation.py, look at changing that, CB 2 Feb 2025 
-    from axes_labels_machine import AxesLabelsMachine # axisLabel is imported into axesLabels
-    from title_machine import TitleMachine
-    from tick_numbering_machine import TickNumberingMachine
-
-    # title has to go first, to sus out proper sizing.
-          
-    curve_title_machine = TitleMachine()
-    curve_title_machine.assign_scene_object_etc(scene_object)
-    text_height_minimum = curve_title_machine.determine_best_text_height()
-    curve_title_machine.generate_title_for_each_curve(text_height_minimum)
-
-    axes_labels_machine = AxesLabelsMachine()
-    axes_labels_machine.assign_scene_object_etc(scene_object)
-    axes_text_height_minimum = axes_labels_machine.determine_best_text_height()
-    if style_object.include_curve_object_axis_labels == True:
-        axes_labels_machine.generate_axes_labels_for_each_curve()    
-
-    tick_numbering_machine = TickNumberingMachine()
-    tick_numbering_machine.assign_scene_object_etc(scene_object)
-    #tick_numbering_machine.generate_tick_numbering_for_the_highest_value_on_all_three_axes_for_curves_with_a_max_dimension()
-    tick_numbering_machine.generate_tick_numbering_for_all_curves()
-
-
-    for curve_object in scene_object.hierarchy_object.dict_curve_objects_all.values():
-        curve_object.calculate_span_10April24()
-
-    #for group_object in scene_object.hierarchy_object.dict_group_objects_most.values():
-    #    group_object.calculate_span_12April24()
-    #    print('main: is this the right spot to bottom-up calculate  group spans?')
-    #    # you cannot call this here, because the span of a group must respect stacking
-    #    # translation.calculate_spans_bottom_up() is the right place
-    #   really, the money is in how group diameter is calculated
-
-    return True
-
-def layout_spatial(scene_object, style_object,hierarchy_object):
-    '''
-    4) Organize the scene
-    Scene, groups, curve_objects
-    Group labels and fences
-    '''
-
-    color_function_list = style_object.prepare_color_modules()
-    print(f"color_function_list check = {color_function_list}")
-    style_object.set_color_function_list(color_function_list)
-    export_function_list = style_object.prepare_export_modules()
-    style_object.set_export_function_list(export_function_list)
-    print("\ntranslation.calculate_placement_bottom_up()")
-    hierarchy_object.step_through_hierarchy_bottom_up(translation.calculate_placement_bottom_up) # ERROR 30January2025, #failuremode: ?
-    print("\ntranslation.calculate_span_relative_to_scene_minimum_edge_at_zero_height_plane_top_down()")
-    hierarchy_object.step_through_hierarchy_top_down(translation.calculate_span_relative_to_scene_minimum_edge_at_zero_height_plane_top_down)
-    #scene_object.add_scene_description_textbox(userInput.scene_description_text)#top lefthand corner of textbox is the same as the lower lefthand corner of the scene, including padding)
-
-    return True
-
-def build_fences(scene_object):
-    '''
-    6++) groups fence lines arrays
-    '''
-    fences_object = Fences()
-    fences_object.assign_scene_object_etc(scene_object)  
-    fences_object.generate_fences()
-    return True
-
-def preview_scene3D(scene_object):
-    '''
-    7) Pyplot/pygame preview should go here
-    '''
-    preview_object = Preview()
-    preview_object.assign_scene_object_etc(scene_object)
-    #preview_object.build()
-    #preview_object.show()
-    if True:
-        preview_object.preview_scene3D(scene_object)
-
-def preview_curve3D(scene_object):
-    preview_object = Preview()
-    preview_object.assign_scene_object_etc(scene_object)
-    if True:
-        preview_object.preview_curve(scene_object)
-
-def generate_export(scene_object,style_object,export_control_object):
-    '''
-    8) FBX Generate
-    '''
-    if True:
-        
-        createFBX_object = \
-                     style_object.prepare_publishing_module(\
-                        export_control_object,
-                        )# return the createFBX instance # this should take custom script names (full or single) and known style keys, 
-        # A scripter/dev could input a different plugin name, into style_object.prepare_export_module(), to control the export without assignment in the gui
-
-        unix_mark = time.time()
-        mark_time = round(unix_mark-scene_object.unix_start,2)
-        print("Creating FBX export file ... mark",mark_time,"sec")
-        createFBX_object.generate_model()
-        createFBX_object.lSdkManager.Destroy() # memory management, this was on;y passed up to troubleshoot variables from the command window
-        if environmental.vercel():
-            #scene_object.filesize_FBX = round(os.path.getsize(scene_object.filepath)/(1024),3)
+    else:# user decided for no data display
+        try:#clear scrollbars if they were there
+            RecordForce.Dislist.place_forget()
+            RecordForce.Forcelist.place_forget()
+            RecordForce.Timelist.place_forget()
+            RecordForce.disLabel.place_forget()
+            RecordForce.forceLabel.place_forget()
+            RecordForce.timeLabel.place_forget()
+        except:# no scrollbars
+            print("no scrollbars")
             pass
-        elif environmental.pyinstaller():
-            scene_object.filesize_FBX = round(os.path.getsize(scene_object.filepath)/(1024),3)
+    
+    i = 0
+    print("i = 0")
+    RecordForce.elapsed = []
+    RecordForce.dis = []
+    RecordForce.force = []
+    string = list()
+
+    #try:
+    
+    while RecordForce.collect == True: # GUI in frontend controls value of collect to start/stop loop            
+        if ser.inWaiting() > 0: #checks to see if Serial is available 
+        
+            try: #make sure serial data can be read/is there
+                ser_bytes = ser.readline()
+            except:
+                errors.append('serial read') # label 
+                eCode = 'e3'
+                errorCodes.append(eCode)
+                popup("serial read")
+    
+
+            if i == 0:
+                start = time.time() #stopwatch starts
+
+            #DELETE?
+            #decoded_bytes.insert(i,(ser_bytes[0:len(ser_bytes)-2].decode("utf-8"))) # acquires & decodes bytes (incoming Arduino data)
+            #string.insert(i,str(decoded_bytes[i])) # inserts decoded bytes into string
+
+            bytesDecoded = (ser_bytes[0:len(ser_bytes)-2].decode("utf-8"))
+            #print("bytesDecoded = ",bytesDecoded)
+            string.insert(i,str(bytesDecoded)) # inserts decoded bytes into string
+            #print(' run ser read ', string[i]) # useful debugging tool
+            split = string[i].split("|") # splits data at | (1st = distance, 2nd = force)
+            print("split = ",split)
+            if len(split) >= 2 and split[0] != "" and split[1] != "": #makes sure data is in proper formatting before processing (else pair: A)
+                inches = split[0]
+                pounds = split[1]
+                
+                try:
+                    RecordForce.elapsed.insert(i, time.time() - start)# list of elapsed time
+                    RecordForce.dis.insert(i, float(inches))# list of inches traveled
+                    RecordForce.force.insert(i, float(pounds))# list of force traveled
+
+                except:
+                    errors.append('data append') # label 
+                    eCode = 'e4'
+                    errorCodes.append(eCode)  
+                 #   popup("Arduino data error")
+                  #  print(string[i])
+
+                '''Scrollbars Options'''
+                '''
+                # if scrollbars option = on:
+                try: # puts data on GUI display by default (user can turn off)  
+                    self.Dislist.insert(END, str(dis[i]))# inserts at end of listbox to actually display
+                    self.Dislist.see(END)# makes sure listbox is at end so it displays live data
+                    self.Forcelist.insert(END, str('%.2f' % force[i]))
+                    self.Forcelist.see(END)
+                    self.Timelist.insert(END, str('%.2f' % elapsed[i]))
+                    self.Timelist.see(END)
+
+                #scrollbars options = off        
+                except:
+                    pass
+                
+                i = i+1
+
+                          '''
+            else: # skips incoming data if not in right format (if pair: A
+                errors.append('data skip (incorrect format)') # label 
+                eCode = 'e5'
+                errorCodes.append(eCode)
+                '''
+    except:
+        if RecordForce.collect == True:
+            errors.append('serial disconnect')
+            eCode = 'e6'
+            errorCodes.append(eCode)
         else:
-            scene_object.filesize_FBX = round(os.path.getsize(scene_object.filepath)/(1024),3)
             pass
-            #scene_object.filesize_FBX = vercel_blob.head(scene_object.filesize_FBX, options={'token': os.environ.get('BLOB_READ_WRITE_TOKEN')})["size"]
-        print("Export: ", scene_object.filename_FBX,",",scene_object.filesize_FBX,"KB")
-        '''
-        9) Convert file, using Blender converter. Try the Facebook conversion.
-        '''
-        if False:
-            converter_object = Convert()
-            converter_object.assign_scene_object_etc(scene_object)
-            converter_object.check_request_and_do()
+            '''
+        
 
-    '''
-    8b) DXF generate
-    '''
-    #from createDXF_ import CreateDXF
-    #createDXF_object = CreateDXF()
-    unix_mark = time.time()
-    mark_time = round(unix_mark-scene_object.unix_start,2)
-    print("Total time:",    mark_time, "sec")
-    return createFBX_object
-
+        
 
 if __name__ == "__main__":
-    #global scene_object # redundantly called in main()
-    Directories.initilize_program_dir()
-    main()
 
-
-
+    ''' Main '''
+    print("StemBerry is loading.....")
+    print("output: address = "+address)
+    print("script = "+script)
+    print("directory = "+Directories.get_src_dir())
+    print("ignoreserial = "+str(ignoreserial))
+    app = GUI() 
+    app.run() # INITIATES GUI TO START
+    app.title("StemBerry")
+    app.geometry("800x480+0+0")
+    app.aspect()
+    #app.geometry("700x700+0+0")
+    #fig = plt.figure()
+    #app.iconbitmap(s'/home/pi/Desktop/SOCEM Code')
+    #app.geometry("{0}x{1}+0+0".format(app.winfo_screenwidth()-3,app.winfo_screenheight()-3)) #full screen:
+    app.mainloop()
+    ''' End '''

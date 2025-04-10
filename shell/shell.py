@@ -1275,8 +1275,13 @@ class DissertationCLI(PalovianCLI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    def do_zzz(self,line=None):
-        print("xxx shall rise.")
+    def do_task1(self,line=None):
+        print("Task 1, start")
+        import projects.task1.scripts.correctch2tables_figs_Cv_pguLtY3235 as file
+        for key, values in file.items():
+            print(key)
+        if False:
+            print("Task 1, complete")
 
 def start_shell():
     app = DissertationCLI()
