@@ -44,6 +44,8 @@ except:
 
 from src.datapoint import DataPoint
 
+
+
 class HistoryEntry:
     """Custom history item to store and display commands properly."""
     def __init__(self, command: str):
@@ -143,6 +145,11 @@ class PalovianCLI(cmd2.Cmd):
     version = get_version()
 
     import cmd2
+
+    def do_run1(self,line):
+        from projects.task1.scripts.correctch2tables_figs_Cv_pguLtY3235_clayton import run
+        Directories.set_project_dir("task1")
+        run()
 
 
     def do_python(self, arg: str):
@@ -1277,9 +1284,8 @@ class DissertationCLI(PalovianCLI):
         super().__init__(*args, **kwargs)
     def do_task1(self,line=None):
         print("Task 1, start")
-        import projects.task1.scripts.correctch2tables_figs_Cv_pguLtY3235 as file
-        for key, values in file.items():
-            print(key)
+        import projects.task1.scripts.correctch2tables_figs_Cv_pguLtY3235_clayton as task1script
+        task1script.run()
         if False:
             print("Task 1, complete")
 

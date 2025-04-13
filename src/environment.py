@@ -5,6 +5,8 @@ Created: 23 July 2024
 '''
 import platform
 import sys
+
+vercel = False
 def windows():
     if 'win' in platform.platform().lower():
         windows=True
