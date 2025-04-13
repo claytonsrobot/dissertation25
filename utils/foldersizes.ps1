@@ -1,4 +1,4 @@
-$folderPath = "C:\Users\user\Documents\dev\dissertation25\.venv\Lib\site-packages"
+$folderPath = "C:\Users\user\Documents\dev\dissertation25\"
 Get-ChildItem -Directory -Path $folderPath | ForEach-Object {
     $folder = $_
     $size = (Get-ChildItem -Recurse -Path $folder.FullName | Measure-Object -Property Length -Sum).Sum
