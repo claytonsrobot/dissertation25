@@ -1,0 +1,9 @@
+Task 4:
+We need to generate the following scatter plots with just samples from the MRVA (e.g., “mergeADs_mrva”) colored by region. Please see attached script (Task4part2.py) and input files (mads4lpmstats3235.csv, mads4resstats32351823.csv, and joint1reg833.csv):
+“MER” (Ohm-m) (x-axis, log scale) v tracer-based mean age (“mulpmad”, years) (y-axis, log scale); colored by region; using mads4lpmstats3235.csv
+“MER” (Ohm-m) (x-axis, log scale) v particle tracking-based mean age (“xbPTbs”, years) (y-axis, log scale); colored by region; using mads4resstats32351823.csv.
+tracer-based mean age (“mulpmad”, years) (x-axis, log scale) v particle tracking-based mean age (“xbPTbs”, years) (y-axis, log scale) with dashed 1:1 line; colored by region; using mads4lpmstats3235.csv.
+coefficient of variation of tracer-based age distribution (“cvlpmad”, unitless) (x-axis, log scale) v coefficient of variation of particle tracking-based age distribution (“cvptad”, unitless) (y-axis, log scale) with dashed 1:1 line; colored by region; using mads4lpmstats3235.csv.
+coefficient of variation of effective resistivity (“cver”, unitless) (x-axis, log scale) v coefficient of variation of tracer-based age distribution (“cvlpmad”, unitless) (y-axis, log scale) with dashed 1:1 line; colored by region; using mads4lpmstats3235.csv.
+average coefficient of variation of resistivity (“acvr”, unitless) (x-axis, log scale) v coefficient of variation of tracer-based age distribution (“cvlpmad”, unitless) (y-axis, log scale) with dashed 1:1 line; colored by region; using mads4lpmstats3235.csv.
+coefficient of variation of coefficient of variation of resistivity (“cvcvr”, unitless) (x-axis, log scale) v coefficient of variation of tracer-based age distribution (“cvlpmad”, unitless) (y-axis, log scale) with dashed 1:1 line; colored by region; using mads4lpmstats3235.csv.

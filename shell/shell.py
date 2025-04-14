@@ -146,10 +146,6 @@ class PalovianCLI(cmd2.Cmd):
 
     import cmd2
 
-    def do_run1(self,line):
-        from projects.task1.scripts.correctch2tables_figs_Cv_pguLtY3235_clayton import run
-        Directories.set_project_dir("task1")
-        run()
 
 
     def do_python(self, arg: str):
@@ -1282,12 +1278,23 @@ class DissertationCLI(PalovianCLI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    def do_task1(self,line=None):
+
+
+    def do_run1(self,line=None):
         print("Task 1, start")
         import projects.task1.scripts.correctch2tables_figs_Cv_pguLtY3235_clayton as task1script
         task1script.run()
-        if False:
+        if True:
             print("Task 1, complete")
+    
+    
+    def do_run4(self,line=None):
+        print("Task 4, start")
+        from projects.task4.scripts.task4part2 import T4
+        Directories.set_project_dir("task4")
+        T4.run()
+        if True:
+            print("Task 4, complete")
 
 def start_shell():
     app = DissertationCLI()

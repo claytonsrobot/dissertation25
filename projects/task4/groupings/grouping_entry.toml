@@ -1,0 +1,3 @@
+[grouping]
+"grouping_selection_filename" = "tuples_09April2025.json" # unnecessary for group-by-directory algorithm
+"algorithm" = "group-by-json" # this is what it sounds like - in the level within the imports folder, those folder names will be the group names. the subgroups are below that, in which are expected curves
