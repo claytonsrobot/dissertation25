@@ -21,34 +21,27 @@ class T4:
         self.nope = "nope"
 
     @classmethod
-    def set_mergeADs(cls, input):
-        cls.mergeADs = input
+    def set_reggrp(cls, input):
+        cls.reggrp = input
+
 
     @classmethod
-    def set_mergeADs_df1_s(cls, input):
-        cls.mergeADs_df1_s = input
+    def get_reggrp(cls):
+        return cls.reggrp
 
-    @classmethod
-    def set_mergeADs_mrva(cls, input):
-        cls.mergeADs_mrva = input
-
-    @classmethod
-    def set_mergeADs_sites(cls, input):
-        cls.mergeADs_sites = input
-
-    @classmethod
-    def set_mergeADssshp(cls, input):
-            cls.mergeADssshp = input
 
         
     def run():
         T4.section0_mpl_config()
         mergeADs,mergeADs_sites = T4.section1_import()
         reggrp = T4.section2_df(mergeADs,mergeADs_sites)
-        T4.plot_acvr_v_cvlpm(reggrp)
-        #T4.plot_MER_v_cvlpm(reggrp)
-        T4.plot_cver_v_cvlpm(reggrp)
-        T4.plot_cvcvr_v_cvlpm(reggrp)
+        T4.set_reggrp(reggrp)
+        
+    def graph():
+        T4.plot_acvr_v_cvlpm(T4.get_reggrp())
+        #T4.plot_MER_v_cvlpm(T4.get_reggrp())
+        T4.plot_cver_v_cvlpm(T4.get_reggrp())
+        T4.plot_cvcvr_v_cvlpm(T4.get_reggrp())
 
         
     def section0_mpl_config():
@@ -191,3 +184,7 @@ class T4:
         ###########################################################################################
         ###########################################################################################
         #sys.exit()
+
+if __name__ == "__main__":
+    T4.run()
+    T4.graph()

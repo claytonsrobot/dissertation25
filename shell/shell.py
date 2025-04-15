@@ -1293,6 +1293,7 @@ class DissertationCLI(PalovianCLI):
         from projects.task4.scripts.task4part2 import T4
         Directories.set_project_dir("task4")
         T4.run()
+        T4.graph()
         if True:
             print("Task 4, complete")
 
